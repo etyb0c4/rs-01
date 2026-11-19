@@ -44,7 +44,7 @@ export function createScene(stage) {
 
     /* G is the picture at this point of the page; pointer is in CSS pixels (or null when there is none) */
     update(G, time, dt, pointer) {
-      hero.group.position.y = G.explode * 0.95
+      hero.group.position.y = G.explode * 0.95 + (G.drop || 0)
       hero.setExplode(G.explode)
       hero.setGlass(G.glass)
       hero.setDetail(G.detail)
@@ -57,6 +57,11 @@ export function createScene(stage) {
       c.set(0, CENTRE + hero.group.position.y * 0.8 - G.rise, 0).addScaledVector(right, -G.shift)
       camera.position.copy(c).addScaledVector(dir, G.dist)
       camera.lookAt(c)
+      if (G.shake > 0.001) {
+        camera.position.x += Math.sin(time * 61) * 0.045 * G.shake
+        camera.position.y += Math.cos(time * 47) * 0.035 * G.shake
+        camera.rotation.z += Math.sin(time * 71) * 0.006 * G.shake
+      }
       camera.updateMatrixWorld()
 
       key.intensity = 2.3 - 1.5 * G.dark

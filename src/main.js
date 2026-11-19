@@ -4,6 +4,7 @@ import './style.css'
 import gsap from 'gsap'
 import { createStage } from './gl/stage.js'
 import { createScene } from './gl/scene.js'
+import { createAudio } from './audio.js'
 import { IDENTITY, LINKS, RECORD, PROJECTS, PARTS, PORTS, STACK, NOTES, FLAGS } from './data.js'
 
 const $ = (s, r = document) => r.querySelector(s)
@@ -102,7 +103,8 @@ addTag('flag', `<b>flag</b><span>${FLAGS.box}</span>`, 'flag')
 console.log(`%c${IDENTITY.unit}%c you opened the box the right way. ${FLAGS.console}`, 'background:#ff4f1a;color:#0c0c0d;padding:2px 6px;font-weight:700', 'color:inherit')
 
 /* ───────── the picture ───────── */
-const G = { az: 0.62, el: 0.3, dist: 9.2, shift: 1.55, rise: 0, turn: 0, explode: 0, glass: 0, detail: 1, dark: 0, seam: 0, lens: 1, ports: 0, parts: 0, flag: 0, spin: 0, dim: 0, fade: 1 }
+const G = { az: 0.62, el: 0.3, dist: 9.2, shift: 1.55, rise: 0, turn: 0, explode: 0, glass: 0, detail: 1, dark: 0, seam: 0, lens: 1, ports: 0, parts: 0, flag: 0, spin: 0, dim: 0, fade: 1, drop: 2.6, shake: 0 }
+const FX = { seam: 0, shake: 0 }
 const S = { t: 0, target: 0, time: 0, narrow: false, slow: 0, alive: true }
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches
 const coarse = matchMedia('(hover: none)').matches
@@ -139,10 +141,25 @@ function build(narrow) {
   T({ el: 0.16, dist: 9.8 * far }, 5.4, 6.4)
   T({ el: 0.3, dist: 10.4 * far, explode: 0.16 }, 6.5, 7)
   tl.to({}, { duration: 0.01 }, 7)
+  for (const w of document.querySelectorAll('#story .w')) {
+    const a = +w.dataset.in, b = +w.dataset.out, d = b - a
+    tl.fromTo(w, { autoAlpha: 0, scale: 0.96, filter: 'blur(14px)', letterSpacing: '0.06em' },
+      { autoAlpha: 1, scale: 1, filter: 'blur(0px)', letterSpacing: '0em', duration: d * 0.38, ease: 'power3.out' }, a)
+    tl.to(w, { autoAlpha: 0, scale: 1.03, filter: 'blur(10px)', duration: d * 0.3, ease: 'power2.in' }, b - d * 0.3)
+  }
 }
 
 const stage = createStage($('#gl'))
+const audio = createAudio()
 let world
+
+const snd = $('#snd')
+const sndLabel = () => { snd.textContent = 'snd · ' + (audio.on ? 'on' : 'off'); snd.classList.toggle('off', !audio.on) }
+sndLabel()
+snd.addEventListener('click', () => { audio.start(); audio.toggle(); sndLabel() })
+for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart']) addEventListener(ev, () => audio.start(), { once: true, passive: true })
+
+const ACTS = { top: 'paper', recon: 'paper', teardown: 'tear', record: 'night', work: 'night', arsenal: 'night', notes: 'night', contact: 'end' }
 
 /* scroll position → timeline time: each section's top is pinned to its data-t */
 let marks = []
@@ -166,7 +183,8 @@ function chapter() {
   for (const m of marks) if (m.id && m.y <= y) cur = m
   if (cur.id === current) return
   current = cur.id
-  $('#chapter').textContent = cur.name || 'sealed unit'
+  scramble($('#chapter'), cur.name || 'sealed unit')
+  audio.setAct(ACTS[cur.id] || 'paper')
   navLinks.forEach((a) => a.classList.toggle('on', a.hash === '#' + cur.id))
 }
 
@@ -179,6 +197,43 @@ function resize() {
   S.target = timeAt(scrollY)
 }
 
+const GLYPHS = '#@%&$01<>/\\*+=?'
+let scrambling = null
+function scramble(el, to) {
+  clearInterval(scrambling)
+  let n = 0
+  scrambling = setInterval(() => {
+    n++
+    el.textContent = [...to].map((c, i) => (c === ' ' || i < n ? c : GLYPHS[(Math.random() * GLYPHS.length) | 0])).join('')
+    if (n >= to.length) clearInterval(scrambling)
+  }, 26)
+}
+
+/* the seal: hold to break it — or it gives on its own once you force the box open */
+const sealBtn = $('#seal-btn')
+let sealed = true, holdP = 0, holding = false
+function breakSeal(quiet) {
+  if (!sealed) return
+  sealed = false
+  holding = false
+  document.body.classList.add('broken')
+  if (!quiet) {
+    audio.hit('crack')
+    gsap.to(FX, { seam: 0.95, duration: 0.09, ease: 'power2.in', onComplete: () => gsap.to(FX, { seam: 0, duration: 1.6, ease: 'power2.out' }) })
+    gsap.fromTo(FX, { shake: 1 }, { shake: 0, duration: 1.1, ease: 'power2.out' })
+    scramble($('#chapter'), 'seal broken')
+  }
+}
+sealBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); audio.start(); holding = true; sealBtn.setPointerCapture(e.pointerId) })
+addEventListener('pointerup', () => { holding = false })
+addEventListener('pointercancel', () => { holding = false })
+sealBtn.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { audio.start(); holding = true } })
+sealBtn.addEventListener('keyup', () => { holding = false })
+
+/* headings flinch when their section arrives */
+const io = new IntersectionObserver((es) => es.forEach((e) => e.target.classList.toggle('inview', e.isIntersecting)), { threshold: 0.12 })
+sections.forEach((sec) => io.observe(sec))
+
 let pointer = null
 if (!coarse) {
   addEventListener('pointermove', (e) => { pointer = pointer || {}; pointer.x = e.clientX; pointer.y = e.clientY }, { passive: true })
@@ -188,8 +243,13 @@ addEventListener('scroll', () => { S.target = timeAt(scrollY); chapter() }, { pa
 addEventListener('resize', resize)
 document.addEventListener('visibilitychange', () => { S.alive = !document.hidden; if (S.alive) { last = performance.now(); requestAnimationFrame(frame) } })
 
-const P = { x: 0, y: 0 }
-let last = performance.now(), night = false
+const P = { x: 0, y: 0 }, CUR = { x: innerWidth / 2, y: innerHeight / 2 }
+const cur = $('#cur')
+if (!coarse) {
+  document.documentElement.classList.add('fine')
+  addEventListener('pointerover', (e) => cur.classList.toggle('act', !!e.target.closest('a, button')), { passive: true })
+}
+let last = performance.now(), night = false, wasOpen = false
 function frame(now) {
   if (!S.alive) return
   const dt = Math.min(0.05, (now - last) / 1000)
@@ -200,8 +260,27 @@ function frame(now) {
   if (!still) G.turn += dt * 0.11 * G.spin
   G.turn *= 1 - (1 - G.spin) * (1 - Math.exp(-dt * 4))
 
-  const view = world.update(G, S.time, dt, coarse ? null : pointer || { x: -9999, y: -9999 })
+  if (holding && sealed) {
+    holdP = Math.min(1, holdP + dt / 1.15)
+    audio.hold(holdP)
+    G.shake = holdP * 0.55
+    if (holdP >= 1) { audio.hold(0); G.shake = 0; breakSeal() }
+  } else if (holdP > 0) { holdP = Math.max(0, holdP - dt * 2.2); audio.hold(holdP); G.shake = sealed ? holdP * 0.55 : 0 }
+  sealBtn.style.setProperty('--p', (holdP * 100).toFixed(1))
+  if (sealed && S.t > 1.7) breakSeal(true)
+
+  const eff = FX.seam > 0.002 || FX.shake > 0.002 ? { ...G, seam: Math.min(1, G.seam + FX.seam), shake: G.shake + FX.shake } : G
+  const view = world.update(eff, S.time, dt, coarse ? null : pointer || { x: -9999, y: -9999 })
   stage.render(S.time, world.scene, world.camera)
+
+  if (!coarse) {
+    if (pointer) {
+      CUR.x += (pointer.x - CUR.x) * (1 - Math.exp(-dt * 24))
+      CUR.y += (pointer.y - CUR.y) * (1 - Math.exp(-dt * 24))
+      cur.style.transform = `translate3d(${CUR.x.toFixed(1)}px, ${CUR.y.toFixed(1)}px, 0)`
+      cur.style.opacity = '1'
+    } else cur.style.opacity = '0'
+  }
 
   for (const id in tagEls) {
     const { el, group } = tagEls[id], k = G[group]
@@ -210,7 +289,8 @@ function frame(now) {
     el.style.opacity = k.toFixed(3)
     el.style.transform = `translate3d(${P.x.toFixed(1)}px, ${P.y.toFixed(1)}px, 0)`
   }
-  if (G.dark > 0.5 !== night) { night = G.dark > 0.5; document.body.classList.toggle('night', night); $('meta[name=theme-color]').content = night ? '#0c0c0d' : '#ecebe7' }
+  if (G.dark > 0.5 !== night) { night = G.dark > 0.5; document.body.classList.toggle('night', night); $('meta[name=theme-color]').content = night ? '#0c0c0d' : '#ecebe7'; if (night) audio.hit('reveal') }
+  if (G.explode > 0.42 !== wasOpen) { wasOpen = G.explode > 0.42; audio.hit(wasOpen ? 'open' : 'close') }
   document.body.classList.toggle('xray', view.lens > 0.4)
 
   // drop the resolution when frames keep running long
@@ -219,17 +299,26 @@ function frame(now) {
 }
 
 async function start() {
+  const bootN = $('#boot-n'), t0 = performance.now()
+  const count = setInterval(() => { bootN.textContent = String(Math.min(99, Math.round((performance.now() - t0) / 11))).padStart(3, '0') }, 40)
   // the print on the box is painted with the mono face, so it has to be there first
   await Promise.race([
     Promise.all([document.fonts.load('600 60px "Geist Mono Variable"'), document.fonts.load('800 60px "Archivo Variable"')]),
     new Promise((r) => setTimeout(r, 2500)),
   ])
+  clearInterval(count)
+  bootN.textContent = '100'
   world = createScene(stage)
   resize()
   S.t = S.target
   chapter()
   document.body.classList.add('ready')
   gsap.to(G, { fade: 0, duration: 1.4, ease: 'power2.out', delay: 0.1 })
+  if (still) G.drop = 0
+  else gsap.to(G, { drop: 0, duration: 1.25, ease: 'bounce.out', delay: 0.45, onComplete: () => {
+    audio.hit('thud')
+    gsap.fromTo(FX, { shake: 0.9 }, { shake: 0, duration: 0.7, ease: 'power2.out' })
+  } })
   new ResizeObserver(() => { measure(); S.target = timeAt(scrollY) }).observe($('main'))
   requestAnimationFrame((t) => { last = t; frame(t) })
   if (import.meta.env.DEV) window.__rs = { G, S, world, stage }

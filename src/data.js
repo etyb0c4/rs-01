@@ -10,7 +10,7 @@ export const IDENTITY = {
   base: 'Cotonou, Bénin',
   school: 'Epitech · class of 2029',
   status: 'Open to internships',
-  avatar: 'avatar.png',
+  avatar: 'avatar.jpg',
 }
 
 export const LINKS = [
