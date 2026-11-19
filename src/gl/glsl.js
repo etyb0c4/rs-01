@@ -50,7 +50,7 @@ uniform sampler2D uTrail;
 uniform vec2 uPointer;
 ${NOISE}
 
-vec3 sceneIce(vec2 p, float tr){
+vec3 sceneSeal(vec2 p, float tr){
   vec2 w = vec2(fbm3(p * 1.25 + 1.7), fbm3(p * 1.25 + 8.2)) - 0.5;
   vec2 q = p * 0.95 + w * 1.05;
   vec2 x1 = q * 1.05 + 3.7;
@@ -67,33 +67,38 @@ vec3 sceneIce(vec2 p, float tr){
   float s2 = smoothstep(0.84, 1.0, vnoise(vec2(dot(p, vec2(0.30, -0.95)) * 3.1, dot(p, vec2(0.95, 0.30)) * 150.0 + 9.0)));
   float scratch = (s1 * smoothstep(0.45, 0.8, fbm3(p * 1.1 + 12.0)) + s2 * smoothstep(0.5, 0.8, fbm3(p * 1.3 + 30.0))) * 0.5;
   float pool = smoothstep(1.7, 0.0, length(p - vec2(0.0, -0.45)));
-  float g = 0.20 + 0.42 * frost + 0.10 * fine + tone * 0.15 + halo * 0.20 + major * 0.55 + minor * 0.34 + scratch * 0.22 + pool * 0.24;
-  vec3 col = mix(vec3(0.17, 0.41, 0.35), vec3(0.72, 0.90, 0.84), clamp(g, 0.0, 1.0));
-  col = mix(col, vec3(0.94, 0.99, 0.97), smoothstep(0.80, 1.25, g));
-  col *= 1.0 - 0.30 * smoothstep(0.7, 2.1, length(p * vec2(0.8, 1.0)));
+  float g = 0.30 * frost + 0.08 * fine + tone * 0.10 + halo * 0.12 + minor * 0.2 + scratch * 0.3;
+  // black lacquer, brushed; the crack web barely catches the light
+  vec3 col = mix(vec3(0.040, 0.040, 0.045), vec3(0.105, 0.103, 0.11), clamp(g, 0.0, 1.0));
+  col += vec3(0.16, 0.155, 0.15) * major * 0.5;
+  col += vec3(0.30, 0.18, 0.12) * pool * 0.16;
+  col *= 1.0 - 0.38 * smoothstep(0.7, 2.1, length(p * vec2(0.8, 1.0)));
+  // the trace: heat in the cracks, then the lacquer gives on an ember bed
   float wob = fbm3(p * 9.0 + uTime * 0.35);
   float t = tr * (0.72 + 0.56 * wob);
   float open = smoothstep(0.34, 0.62, t);
   float rim = smoothstep(0.06, 0.34, t) * (1.0 - smoothstep(0.5, 0.9, t));
-  vec3 under = mix(vec3(0.26, 0.72, 0.52), vec3(0.62, 0.97, 0.74), fbm3(p * 3.0 - uTime * 0.2));
-  col = mix(col, under, open * 0.92);
-  col += vec3(1.0) * rim * 1.15;
-  col = mix(col, vec3(1.0), uMelt);
+  vec3 under = mix(vec3(0.72, 0.16, 0.04), vec3(1.0, 0.46, 0.12), fbm3(p * 3.0 - uTime * 0.2));
+  col += vec3(1.0, 0.31, 0.10) * (major + halo * 0.4) * smoothstep(0.02, 0.3, t) * 1.2;
+  col = mix(col, under, open * 0.94);
+  col += vec3(1.0, 0.7, 0.4) * rim * 1.1;
+  col = mix(col, vec3(0.925, 0.92, 0.905), uMelt);
   return col;
 }
 
 vec3 sceneSky(vec2 p){
-  vec3 base = mix(vec3(0.80, 0.93, 0.89), vec3(1.0), smoothstep(-1.15, 0.35, p.y - abs(p.x) * 0.22));
+  // the paper studio: warm sweep, a pool of light, the faintest drift of dust
+  vec3 base = mix(vec3(0.845, 0.84, 0.822), vec3(0.95, 0.946, 0.932), smoothstep(-1.15, 0.6, p.y - abs(p.x) * 0.12));
   vec2 q = p * 0.9 + vec2(uTime * 0.012, 0.0);
   float c = fbm(q * 1.6 + fbm3(q * 2.2 + 3.0) * 0.8);
-  float c2 = fbm(q * 3.1 - vec2(uTime * 0.02, 1.7));
-  vec3 blue = mix(vec3(0.62, 0.83, 0.92), vec3(0.82, 0.93, 0.96), smoothstep(-0.4, 0.9, p.y));
-  vec3 rich = mix(blue, vec3(1.0), smoothstep(0.38, 0.78, c * 0.75 + c2 * 0.35));
-  rich = mix(rich, vec3(0.74, 0.90, 0.84), smoothstep(-0.2, -1.1, p.y) * 0.75);
+  float pool = exp(-dot(p - vec2(0.0, -0.1), p - vec2(0.0, -0.1)) * 0.9);
+  vec3 rich = base + vec3(0.05, 0.045, 0.036) * pool;
+  rich += (c - 0.5) * 0.028;
   vec2 d = p - vec2(1.25, 1.05);
   float ang = atan(d.y, d.x);
   float rays = pow(vnoise(vec2(ang * 9.0, uTime * 0.06)), 2.0) * smoothstep(2.8, 0.2, length(d));
-  rich += vec3(1.0, 0.99, 0.94) * rays * 0.55;
+  rich += vec3(1.0, 0.9, 0.76) * rays * 0.22;
+  rich *= 1.0 - 0.14 * smoothstep(0.8, 2.1, length(p * vec2(0.8, 1.0)));
   return mix(base, rich, uSkyRich);
 }
 
@@ -102,8 +107,8 @@ vec3 sceneCurtain(vec2 p){
   float f = pow(sin(x * 3.1) * 0.5 + 0.5, 1.7);
   float f2 = sin(x * 7.7 + 1.7) * 0.5 + 0.5;
   float sh = 0.16 + 0.84 * f * (0.62 + 0.38 * f2);
-  vec3 col = mix(vec3(0.16, 0.0, 0.015), vec3(0.83, 0.05, 0.07), sh);
-  col += vec3(1.0, 0.32, 0.26) * pow(f, 9.0) * 0.22;
+  vec3 col = mix(vec3(0.055, 0.008, 0.004), vec3(0.52, 0.075, 0.025), sh);
+  col += vec3(1.0, 0.33, 0.10) * pow(f, 9.0) * 0.38;
   col *= mix(0.42, 1.0, smoothstep(-1.2, 0.5, p.y));
   col *= 1.0 - 0.55 * smoothstep(0.5, 1.9, length(p * vec2(0.75, 1.0)));
   return col;
@@ -112,12 +117,12 @@ vec3 sceneCurtain(vec2 p){
 vec3 sceneDeep(vec2 p){
   vec2 q = p * 1.1 + vec2(0.0, uTime * 0.01);
   float f = fbm(q * 1.4 + fbm3(q * 2.0 - uTime * 0.02) * 0.9);
-  vec3 col = vec3(0.012, 0.028, 0.022);
-  col += vec3(0.03, 0.20, 0.12) * pow(f, 2.2) * 1.5 * smoothstep(-1.3, 1.1, p.y);
-  col += vec3(0.05, 0.30, 0.18) * smoothstep(1.5, 0.0, length(p - vec2(0.15, 1.0))) * 0.5;
+  vec3 col = vec3(0.014, 0.016, 0.028);
+  col += vec3(0.10, 0.045, 0.02) * pow(f, 2.2) * 1.5 * smoothstep(-1.3, 1.1, p.y);
+  col += vec3(0.10, 0.13, 0.30) * smoothstep(1.5, 0.0, length(p - vec2(0.15, 1.0))) * 0.5;
   vec2 g = p * 26.0; vec2 id = floor(g); float h = hash21(id);
   float tw = step(0.985, h) * (0.5 + 0.5 * sin(uTime * 2.0 + h * 80.0));
-  col += vec3(0.8, 1.0, 0.9) * tw * smoothstep(0.35, 0.0, length(fract(g) - 0.5)) * 0.5;
+  col += mix(vec3(0.55, 0.65, 1.0), vec3(1.0, 0.55, 0.25), step(0.5, hash21(id + 7.0))) * tw * smoothstep(0.35, 0.0, length(fract(g) - 0.5)) * 0.5;
   return col;
 }
 
@@ -128,11 +133,11 @@ void main(){
   vec2 grad = vec2(texture2D(uTrail, vUv + e.xy).r - texture2D(uTrail, vUv - e.xy).r, texture2D(uTrail, vUv + e.yx).r - texture2D(uTrail, vUv - e.yx).r);
   vec2 pr = p + grad * 0.16 * (1.0 - uIce);
   vec3 col = vec3(0.0);
-  if (uIce > 0.001) col += sceneIce(p, tr) * uIce;
+  if (uIce > 0.001) col += sceneSeal(p, tr) * uIce;
   if (uSky > 0.001) col += sceneSky(pr) * uSky;
-  if (uCurtain > 0.001) col += (sceneCurtain(pr) + vec3(1.0, 0.5, 0.45) * tr * 0.10) * uCurtain;
-  if (uDeep > 0.001) col += (sceneDeep(pr) + vec3(0.25, 1.0, 0.65) * tr * 0.10) * uDeep;
-  if (uWorld > 0.001) col += mix(vec3(0.36, 0.63, 0.72), vec3(0.78, 0.90, 0.93), smoothstep(-0.6, 1.0, p.y)) * uWorld;
+  if (uCurtain > 0.001) col += (sceneCurtain(pr) + vec3(1.0, 0.45, 0.18) * tr * 0.10) * uCurtain;
+  if (uDeep > 0.001) col += (sceneDeep(pr) + vec3(1.0, 0.5, 0.2) * tr * 0.10) * uDeep;
+  if (uWorld > 0.001) col += mix(vec3(0.03, 0.035, 0.055), vec3(0.085, 0.09, 0.12), smoothstep(-0.6, 1.0, p.y)) * uWorld;
   gl_FragColor = vec4(col, 1.0);
 }
 `
@@ -156,7 +161,7 @@ void main(){
     float cover = smoothstep(edge - 0.2, edge + 0.75, edge * 2.0 - r - (n - 0.5) * 1.5 + 0.2);
     cover = smoothstep(0.0, 1.0, cover) * smoothstep(1.0, 0.92, uOpen);
     cover = mix(cover, 1.0, 1.0 - smoothstep(0.0, 0.06, uOpen));
-    vec3 cc = mix(vec3(0.90, 0.94, 0.95), vec3(1.0), smoothstep(0.25, 0.7, n));
+    vec3 cc = mix(vec3(0.88, 0.872, 0.85), vec3(0.965, 0.96, 0.945), smoothstep(0.25, 0.7, n));
     over(acc, cc, cover * uCloud);
   }
   float vg = uVig * smoothstep(0.75, 1.9, length(p * vec2(0.8, 1.0)));

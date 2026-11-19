@@ -1,11 +1,13 @@
+import '@fontsource-variable/archivo/wdth.css'
+import '@fontsource-variable/archivo/wdth-italic.css'
+import '@fontsource-variable/geist-mono'
 import './style.css'
 import gsap from 'gsap'
 import * as THREE from 'three'
 import { createStage } from './gl/stage.js'
 import { createCore, createShards, createDepths } from './gl/acts.js'
-import { createWorld, SITES } from './gl/world.js'
 import { createAudio } from './audio.js'
-import { PROJECTS, SHARD_LABELS, LINKS, STACK } from './data.js'
+import { IDENTITY, LINKS, RECORD, PROJECTS, PARTS, STACK, NOTES, FLAGS, SHARD_LABELS } from './data.js'
 
 const $ = (s, r = document) => r.querySelector(s)
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v))
@@ -24,7 +26,6 @@ const core = createCore()
 const shards = createShards(SHARD_LABELS)
 const depths = createDepths()
 actScene.add(core.group, shards.group, depths.group)
-const world = createWorld()
 
 /* ───────── timeline ───────── */
 const tl = gsap.timeline({ paused: true, defaults: { ease: 'none' } })
@@ -88,80 +89,105 @@ document.querySelectorAll('.st').forEach((st) => {
 
 /* ───────── dom ───────── */
 const el = {
-  draw: $('#draw'), gate: $('#gate'), gateFg: $('#gate-fg'), hint: $('#hint'), explore: $('#explore'), pins: $('#pins'),
+  draw: $('#draw'), gate: $('#gate'), gateFg: $('#gate-fg'), hint: $('#hint'), explore: $('#explore'),
   needle: $('#needle'), ring: $('#ring'), uidN: $('#uid-n'), uidName: $('#uid-name'), sound: $('#sound'),
-  dockMain: $('#dock-main'), menu: $('#menu'), menuBtn: $('#menu-btn'), panel: $('#panel'), panelBody: $('#panel-body'),
+  dockMain: $('#dock-main'), menu: $('#menu'), menuBtn: $('#menu-btn'), fork: $('#fork'), cross: $('#cross'),
 }
 $('#ticks').innerHTML = '<i></i>'.repeat(31)
 $('#sr-work').innerHTML = PROJECTS.map((p) => `<li><strong>${p.name}</strong>, ${p.role} (${p.year}). ${p.blurb}</li>`).join('')
 
-const byId = Object.fromEntries(PROJECTS.map((p) => [p.id, p]))
-const pins = SITES.map((s) => {
-  const b = document.createElement('button')
-  b.type = 'button'
-  const p = byId[s.id]
-  b.className = 'pin' + (p ? '' : ' hub')
-  b.innerHTML = p ? `<i>${p.index}</i>${p.name}` : 'ring 0 · about'
-  b.addEventListener('click', () => openPanel(s.id))
-  el.pins.append(b)
-  return { id: s.id, b }
-})
+const ext = (url) => (url && !url.startsWith('mailto:') ? ' target="_blank" rel="noopener"' : '')
+const when = (d) => { const [y, m] = String(d).split('-'); return m ? `${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1]} ${y}` : y }
+const chips = (list) => list.map((x) => `<span>${x}</span>`).join('')
+const asset = (p) => (/^(https?:)?\/\//.test(p) ? p : import.meta.env.BASE_URL + p.replace(/^\//, ''))
 
-$('#menu-list').innerHTML = PROJECTS.map((p) => `<li><button type="button" data-id="${p.id}"><i>${p.index}</i>${p.name}<span>${p.role}</span></button></li>`).join('') +
-  `<li><button type="button" data-id="ring0"><i>00</i>About<span>Cotonou · Epitech 2029</span></button></li>`
-
-const panelHTML = (id) => {
-  const p = byId[id]
-  if (!p) return `
-    <p class="p-k">ring 0 · uid=0(root)</p>
-    <h2 class="p-t"><i class="sw">R</i>ayan Sama</h2>
-    <p class="p-r">Full-stack developer &amp; security researcher.</p>
-    <p class="p-b">I build systems before I break them. Understanding a thing and defeating it are the same discipline, learned from opposite ends. When the existing tool is slower than the problem, the tool gets rewritten.</p>
-    <dl class="p-f">
-      <div><dt>based in</dt><dd>Cotonou, Bénin</dd></div>
-      <div><dt>school</dt><dd>Epitech · class of 2029</dd></div>
-      <div><dt>field</dt><dd>web · pwn · rev · forensics</dd></div>
-      <div><dt>ranges</dt><dd>HackTheBox · Root-Me</dd></div>
-      <div><dt>status</dt><dd>open to internships</dd></div>
-    </dl>
-    <div class="p-s">${STACK.map((s) => `<span>${s}</span>`).join('')}</div>
-    <a class="p-a" href="mailto:${LINKS.mail}">Write to me</a><a class="p-a" href="${LINKS.github}" target="_blank" rel="noopener">GitHub ↗</a>`
-  return `
-    <p class="p-k">${p.index} / 04 · ${p.year}</p>
-    <h2 class="p-t">${p.sw ? `<i class="sw">${p.sw}</i>` : ''}${p.rest}</h2>
-    <p class="p-r">${p.role}</p>
-    <img class="p-img" src="${p.img}" alt="${p.name} preview" loading="lazy" />
-    <p class="p-b">${p.blurb}</p>
-    <p class="p-m">${p.metric}</p>
-    <div class="p-s">${p.stack.map((s) => `<span>${s}</span>`).join('')}</div>
-    <a class="p-a" href="${LINKS.github}" target="_blank" rel="noopener">GitHub ↗</a>`
+const card = (p, i) => `
+  <article class="card">
+    <div class="shot"><img src="${asset(p.img)}" alt="${p.name}" loading="lazy" /><span class="side ${p.side}">${p.side}</span></div>
+    <p class="meta"><b>${String(i + 1).padStart(2, '0')}</b>${p.role}<i>${p.year}</i></p>
+    <h3>${p.url ? `<a href="${p.url}"${ext(p.url)}>${p.name} ↗</a>` : p.name}</h3>
+    <p class="blurb">${p.blurb}</p>
+    <p class="metric">${p.metric}</p>
+    <div class="tagsline">${chips(p.stack)}</div>
+  </article>`
+$('#work-list').innerHTML = PROJECTS.filter((p) => p.side === 'build').map(card).join('')
+$('#ops-list').innerHTML = PROJECTS.filter((p) => p.side === 'break').map(card).join('')
+$('#stack-list').innerHTML = chips(STACK)
+$('#record-list').innerHTML = RECORD.map((r) => {
+  const body = `
+    <span class="rank">${r.rank}</span>
+    <div class="what"><strong>${r.event}</strong><span>${[r.result, r.scope].filter(Boolean).join(' · ')}</span><div class="tagsline">${chips(r.tags || [])}</div></div>
+    <dl><div><dt>type</dt><dd>${r.kind}</dd></div><div><dt>date</dt><dd>${when(r.date)}</dd></div>${r.as ? `<div><dt>as</dt><dd>${r.as}</dd></div>` : ''}</dl>`
+  return `<li>${r.url ? `<a class="row" href="${r.url}"${ext(r.url)}>${body}</a>` : `<div class="row">${body}</div>`}</li>`
+}).join('')
+$('#arsenal-list').innerHTML = PARTS.map((p) => `<div class="kit"><p><b>${p.key}</b>${p.title}</p><div class="tagsline">${chips(p.tools)}</div></div>`).join('')
+if (NOTES.length) {
+  $('#notes').hidden = false
+  $('#notes-list').innerHTML = NOTES.map((n) => `
+    <li><a class="row" href="${n.url || '#'}"${ext(n.url)}>
+      <span class="cat">${n.category}</span>
+      <div class="what"><strong>${n.title}</strong><span>${n.summary || ''}</span><div class="tagsline">${chips(n.tags || [])}</div></div>
+      <dl><div><dt>date</dt><dd>${when(n.date)}</dd></div></dl>
+    </a></li>`).join('')
 }
+const initials = IDENTITY.name.split(' ').map((w) => w[0]).join('')
+document.querySelectorAll('.id-card').forEach((idc) => {
+  idc.innerHTML = `
+  <div class="avatar"><img src="${asset(IDENTITY.avatar)}" alt="${IDENTITY.name}" /><span>${initials}</span></div>
+  <div class="who">
+    <h2>${IDENTITY.name}</h2>
+    <p class="aka">${IDENTITY.aliases.map((a) => `<b>${a}</b>`).join(' <i>/</i> ')}</p>
+    <dl class="facts">
+      <div><dt>role</dt><dd>${IDENTITY.role}</dd></div>
+      <div><dt>based in</dt><dd>${IDENTITY.base}</dd></div>
+      <div><dt>school</dt><dd>${IDENTITY.school}</dd></div>
+      <div><dt>status</dt><dd>${IDENTITY.status}</dd></div>
+    </dl>
+    <div class="links">${LINKS.map((l) => `<a href="${l.url}"${ext(l.url)}><i>${l.label}</i>${l.text}<b>↗</b></a>`).join('')}</div>
+  </div>`
+  const av = idc.querySelector('.avatar img')
+  av.addEventListener('error', () => av.parentElement.classList.add('none'))
+})
+document.querySelectorAll('.foot').forEach((f) => { f.innerHTML = `<span>${IDENTITY.unit} · © ${new Date().getFullYear()} ${IDENTITY.name}</span><span>no trackers, no templates</span>` })
+console.log(`%c${IDENTITY.unit}%c you opened the box the right way. ${FLAGS.console}`, 'background:#ff4f1a;color:#0c0c0d;padding:2px 6px;font-weight:700', 'color:inherit')
 
-let openId = null
-function openPanel(id) {
-  if (!S.world) { skip(() => openPanel(id)); return }
-  openId = id
-  el.panelBody.innerHTML = panelHTML(id)
-  el.panel.hidden = false
-  el.panel.style.animation = 'none'; void el.panel.offsetWidth; el.panel.style.animation = ''
-  el.panel.scrollTop = 0
-  document.body.classList.add('panel-open')
-  pins.forEach((p) => p.b.classList.toggle('is', p.id === id))
-  world.focus(id)
-  audio.hit('open')
+$('#menu-list').innerHTML = `
+  <li><button type="button" data-id="good"><i>A</i>Good path<span>the one that builds</span></button></li>
+  <li><button type="button" data-id="dark"><i>B</i>Dark path<span>the one that breaks</span></button></li>`
+
+/* ── the dimensions ── */
+let PATH = null
+function choose(path) {
+  if (!S.world) { skip(() => choose(path)); return }
+  audio.start()
+  const was = PATH
+  PATH = path
+  document.body.classList.remove('path-good', 'path-dark')
+  document.body.classList.add('path-' + path, 'dim-open', 'jumping')
+  setTimeout(() => document.body.classList.remove('jumping'), 600)
+  $('#dim-good').hidden = path !== 'good'
+  $('#dim-dark').hidden = path !== 'dark'
+  const dim = $(path === 'good' ? '#dim-good' : '#dim-dark')
+  dim.scrollTop = 0
+  gsap.fromTo(dim.querySelector('.dim-in'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.7, ease: 'power3.out', delay: 0.1 })
+  el.cross.hidden = false
+  el.cross.querySelector('span').textContent = path === 'good' ? 'cross to the dark path' : 'cross to the good path'
+  if (was !== path) audio.hit(path === 'dark' ? 'shatter' : 'open')
   el.explore.classList.remove('on'); exploreSeen = true
   toggleMenu(false)
 }
-function closePanel() {
-  if (!openId) return
-  openId = null
-  el.panel.hidden = true
-  document.body.classList.remove('panel-open')
-  pins.forEach((p) => p.b.classList.remove('is'))
-  world.focus(null)
+function leaveDim() {
+  if (!PATH) return
+  PATH = null
+  document.body.classList.remove('path-good', 'path-dark', 'dim-open')
+  $('#dim-good').hidden = true
+  $('#dim-dark').hidden = true
+  el.cross.hidden = true
   audio.hit('close')
 }
-$('#panel-x').addEventListener('click', closePanel)
+document.querySelectorAll('[data-choose]').forEach((b) => b.addEventListener('click', () => choose(b.dataset.choose)))
+document.querySelectorAll('.dim-x').forEach((b) => b.addEventListener('click', leaveDim))
+el.cross.addEventListener('click', () => choose(PATH === 'good' ? 'dark' : 'good'))
 
 function toggleMenu(force) {
   const open = force ?? el.menu.hidden
@@ -169,7 +195,7 @@ function toggleMenu(force) {
   el.menuBtn.setAttribute('aria-expanded', String(open))
 }
 el.menuBtn.addEventListener('click', () => { audio.start(); toggleMenu(); audio.hit('tick') })
-$('#menu-list').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) openPanel(b.dataset.id) })
+$('#menu-list').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) choose(b.dataset.id) })
 $('#cta').addEventListener('click', () => { el.dockMain.classList.add('open'); audio.hit('open') })
 $('#say-hi').addEventListener('click', () => { el.dockMain.classList.add('open'); audio.hit('open') })
 $('#back').addEventListener('click', () => el.dockMain.classList.remove('open'))
@@ -223,23 +249,21 @@ const P = { x: 0.5, y: 0.5, px: 0.5, py: 0.5, down: false, sx: 0, sy: 0, lx: 0, 
 let stroke = [], fading = false, exploreSeen = false
 const size = { w: innerWidth, h: innerHeight }
 
-function isZero() {
-  if (stroke.length < 14) return false
-  let cx = 0, cy = 0
-  for (const p of stroke) { cx += p.x; cy += p.y }
-  cx /= stroke.length; cy /= stroke.length
-  let r = 0
-  for (const p of stroke) r += Math.hypot(p.x - cx, p.y - cy)
-  r /= stroke.length
-  if (r < Math.min(size.w, size.h) * 0.07) return false
-  let sum = 0, prev = Math.atan2(stroke[0].y - cy, stroke[0].x - cx)
-  for (let i = 1; i < stroke.length; i++) {
-    const a = Math.atan2(stroke[i].y - cy, stroke[i].x - cx)
-    let d = a - prev
-    if (d > Math.PI) d -= Math.PI * 2; else if (d < -Math.PI) d += Math.PI * 2
-    sum += d; prev = a
+function isS() {
+  if (stroke.length < 12) return false
+  const ys = stroke.map((p) => p.y), xs = stroke.map((p) => p.x)
+  const h = Math.max(...ys) - Math.min(...ys), w = Math.max(...xs) - Math.min(...xs)
+  if (h < size.h * 0.14 || w < size.w * 0.03) return false
+  if (stroke.at(-1).y - stroke[0].y < h * 0.5) return false // an S travels downward
+  let flips = 0, dir = 0
+  for (let i = 2; i < stroke.length; i++) {
+    const dx = stroke[i].x - stroke[i - 2].x
+    if (Math.abs(dx) < 3) continue
+    const d = Math.sign(dx)
+    if (dir !== 0 && d !== dir) flips++
+    dir = d
   }
-  return Math.abs(sum) > 5.5
+  return flips >= 2 && flips <= 6
 }
 
 const nearCentre = (e) => Math.hypot(e.clientX - size.w / 2, e.clientY - size.h / 2) < Math.max(120, Math.min(size.w, size.h) * 0.2)
@@ -265,53 +289,40 @@ addEventListener('pointermove', (e) => {
   P.lx = e.clientX; P.ly = e.clientY
   if (P.down) {
     P.moved += Math.abs(dx) + Math.abs(dy)
-    if (!S.entered) { stroke.push({ x: e.clientX, y: e.clientY }); if (isZero()) enter() }
-    else if (S.world && e.target === canvas) { if (P.moved > 5) { world.pan(dx, dy); if (openId) closePanel(); el.explore.classList.remove('on'); exploreSeen = true } }
-    else if (!S.holding && P.type === 'touch') nudge(-dy * 0.014)
-  } else if (S.world && e.target === canvas && P.type === 'mouse') {
-    const id = world.pick(P.x * 2 - 1, P.y * 2 - 1)
-    world.setHover(id)
-    document.body.classList.toggle('point', !!id)
+    if (!S.entered) { stroke.push({ x: e.clientX, y: e.clientY }); if (isS()) enter() }
+    else if (!S.holding && P.type === 'touch' && !S.world && !PATH) nudge(-dy * 0.014)
   }
 })
-const release = (e) => {
+const release = () => {
   if (!P.down) return
   P.down = false; S.holding = false
   document.body.classList.remove('grabbing')
   if (!S.entered) { stroke = []; fading = true; el.draw.classList.remove('busy') }
-  else if (S.world && P.moved < 6 && e.target === canvas) {
-    const id = world.pick((e.clientX / size.w) * 2 - 1, -(e.clientY / size.h) * 2 + 1)
-    if (id) openPanel(id); else closePanel()
-  }
 }
 addEventListener('pointerup', release)
 addEventListener('pointercancel', release)
 
 addEventListener('wheel', (e) => {
-  if (e.target.closest?.('.panel')) return
+  if (e.target.closest?.('.dim')) return
   e.preventDefault()
   const dy = e.deltaMode === 1 ? e.deltaY * 32 : e.deltaY
   if (!S.entered || S.auto) return
-  if (S.world) {
-    if (dy < 0 && world.atMaxOut()) { S.exit += -dy; if (S.exit > 500) leaveWorld() } else S.exit = 0
-    world.zoom(dy * 0.012)
-    return
-  }
+  if (S.world) { if (dy < -40 && !PATH) leaveFork(); return }
   nudge(dy * 0.0024)
 }, { passive: false })
 
 addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closePanel(); toggleMenu(false); return }
+  if (e.key === 'Escape') { if (PATH) leaveDim(); else toggleMenu(false); return }
   if (e.target.closest?.('button, a, .panel') && e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return
   if (!S.entered) { if (e.key === 'Enter') { audio.start(); skip() } return }
   if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); audio.start(); if (atGate()) S.holding = true; else nudge(0.9) }
   else if (e.key === 'ArrowDown' || e.key === 'PageDown') nudge(0.9)
-  else if (e.key === 'ArrowUp' || e.key === 'PageUp') { if (S.world) leaveWorld(); else nudge(-0.9) }
+  else if (e.key === 'ArrowUp' || e.key === 'PageUp') { if (S.world) leaveFork(); else nudge(-0.9) }
 })
 addEventListener('keyup', (e) => { if (e.key === ' ' || e.key === 'Enter') S.holding = false })
 
-function leaveWorld() {
-  closePanel(); world.home()
+function leaveFork() {
+  leaveDim()
   S.world = false; S.exit = 0
   S.target = END - 1.4
 }
@@ -343,7 +354,6 @@ function resize() {
   actCam.aspect = size.w / size.h
   actCam.fov = actCam.aspect < 1 ? 58 : 35
   actCam.updateProjectionMatrix()
-  world.resize(size.w, size.h)
 }
 addEventListener('resize', resize)
 resize()
@@ -380,8 +390,7 @@ function frame(now) {
   if (!S.world && !S.auto && S.t > END - 0.05) S.world = true
   if (S.world !== wasWorld && S.world && !exploreSeen) el.explore.classList.add('on')
   if (!S.world) el.explore.classList.remove('on')
-  document.body.classList.toggle('grab', S.world)
-  el.pins.classList.toggle('on', G.world > 0.5 && G.open > 0.86)
+  el.fork.classList.toggle('on', S.world && G.open > 0.6 && !PATH)
   el.hint.classList.toggle('on', S.entered && !S.auto && !gate && !S.world && S.idle > 2.2)
 
   // pointer trail
@@ -403,35 +412,25 @@ function frame(now) {
   o.uCloud.value = G.cloud; o.uOpen.value = G.open; o.uBlack.value = G.black
   o.uWhite.value = Math.max(G.white, S.flash); o.uGrain.value = G.grain; o.uVig.value = G.vig
 
-  const inWorld = G.world > 0.5
-  if (inWorld) {
-    world.update(S.time, dt, G.open)
-    for (const p of pins) {
-      const s = world.screen(p.id, size.w, size.h)
-      p.b.style.transform = `translate(${s.x.toFixed(1)}px, ${(s.y - 40).toFixed(1)}px) translateX(-50%)`
-    }
-    stage.render(S.time, world.scene, world.camera)
-  } else {
-    cam.x += ((P.x - 0.5) * 0.7 - cam.x) * 0.05; cam.y += ((P.y - 0.5) * 0.4 - cam.y) * 0.05
-    actCam.position.set(cam.x, cam.y, G.camZ)
-    actCam.lookAt(cam.x * 0.3, cam.y * 0.3, G.camZ - 10)
-    const firstGate = !GATES[0].solved || S.t < 9.25
-    core.group.visible = G.coreS > 0.002
-    core.group.position.set(0, G.coreY, G.camZ - 8)
-    core.group.scale.setScalar(Math.max(0.0001, G.coreS) * (actCam.aspect < 1 ? 0.85 : 1))
-    core.u.uDark.value = G.coreDark
-    core.u.uCrack.value = firstGate ? S.hold : 0
-    core.u.uGlow.value = 0.35 + S.hold * 1.4
-    core.update(S.time, dt, S.hold)
-    shards.update(S.time, dt, G.explode, G.shards, G.camZ)
-    depths.update(S.time, dt, G.depths, stage.renderer.getPixelRatio() * size.h / 900)
-    stage.render(S.time, actScene, actCam)
-  }
+  cam.x += ((P.x - 0.5) * 0.7 - cam.x) * 0.05; cam.y += ((P.y - 0.5) * 0.4 - cam.y) * 0.05
+  actCam.position.set(cam.x, cam.y, G.camZ)
+  actCam.lookAt(cam.x * 0.3, cam.y * 0.3, G.camZ - 10)
+  const firstGate = !GATES[0].solved || S.t < 9.25
+  core.group.visible = G.coreS > 0.002
+  core.group.position.set(0, G.coreY, G.camZ - 8)
+  core.group.scale.setScalar(Math.max(0.0001, G.coreS) * (actCam.aspect < 1 ? 0.85 : 1))
+  core.u.uDark.value = G.coreDark
+  core.u.uCrack.value = firstGate ? S.hold : 0
+  core.u.uGlow.value = 0.35 + S.hold * 1.4
+  core.update(S.time, dt, S.hold)
+  shards.update(S.time, dt, G.explode, G.shards, G.camZ)
+  depths.update(S.time, dt, G.depths, stage.renderer.getPixelRatio() * size.h / 900)
+  stage.render(S.time, actScene, actCam)
   requestAnimationFrame(frame)
 }
 
 // handles for scripted walkthroughs and tests
-window.__zero = { S, G, GATES, enter, skip, solve, openPanel, closePanel }
+window.__rs = { S, G, GATES, enter, skip, solve, choose, leaveDim, leaveFork, isS: () => isS(), strokeLen: () => stroke.length }
 
 if (matchMedia('(prefers-reduced-motion: reduce)').matches) { S.flash = 1; skip() }
 requestAnimationFrame(frame)

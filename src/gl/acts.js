@@ -25,21 +25,20 @@ export function createCore() {
       void main(){
         vec3 n = normalize(vN), v = normalize(vV);
         float ndv = clamp(dot(n, v), 0.0, 1.0), fr = pow(1.0 - ndv, 2.4);
-        vec3 irid = 0.5 + 0.5 * cos(6.2831 * (fr * 1.3 + n.y * 0.35 + uTime * 0.03 + vec3(0.0, 0.33, 0.67)));
-        vec3 light = mix(vec3(0.98, 1.0, 0.99), vec3(0.52, 0.80, 0.72), fr);
-        light = mix(light, irid, 0.20 * fr + 0.04);
-        light += vec3(1.0) * pow(max(dot(n, normalize(vec3(0.5, 0.8, 0.6))), 0.0), 26.0) * 0.5;
-        light *= 0.80 + 0.20 * smoothstep(-1.0, 0.6, n.y);
-        vec3 dark = mix(vec3(0.012, 0.035, 0.028), vec3(0.25, 0.95, 0.66), pow(fr, 1.4));
-        dark += vec3(0.85, 1.0, 0.93) * pow(ndv, 9.0) * uGlow;
-        dark += irid * 0.10 * fr;
+        // matte black lacquer with a heat inside; in the dark act, a cold blue rim instead
+        float heat = 0.5 + 0.5 * sin(uTime * 0.9);
+        vec3 light = mix(vec3(0.085, 0.084, 0.09), vec3(0.42, 0.42, 0.45), pow(fr, 1.6));
+        light += vec3(1.0, 0.42, 0.14) * pow(ndv, 7.0) * (0.14 + 0.08 * heat);
+        light += vec3(1.0) * pow(max(dot(n, normalize(vec3(0.5, 0.8, 0.6))), 0.0), 26.0) * 0.35;
+        vec3 dark = mix(vec3(0.016, 0.017, 0.026), vec3(0.42, 0.52, 0.95), pow(fr, 1.4));
+        dark += vec3(1.0, 0.5, 0.18) * pow(ndv, 9.0) * uGlow;
         vec3 col = mix(light, dark, uDark);
         vec3 vr = voro(vP.xy * 3.2 + vP.z * 1.3);
         float reach = uCrack * 3.0 - distance(vP, uPress);
         float line = smoothstep(0.055, 0.0, vr.x) * smoothstep(0.0, 0.35, reach);
-        vec3 cc = mix(vec3(0.08, 0.27, 0.24), vec3(1.0), smoothstep(0.72, 1.0, uCrack));
-        col = mix(col, cc, line * 0.92);
-        col = mix(col, vec3(1.0), smoothstep(0.85, 1.0, uCrack) * 0.6);
+        vec3 cc = mix(vec3(1.0, 0.31, 0.10), vec3(1.0, 0.85, 0.6), smoothstep(0.72, 1.0, uCrack));
+        col = mix(col, cc, line * 0.95);
+        col = mix(col, vec3(1.0, 0.93, 0.85), smoothstep(0.85, 1.0, uCrack) * 0.6);
         gl_FragColor = vec4(col, 1.0);
       }`,
   }))
@@ -53,8 +52,8 @@ export function createCore() {
       precision highp float; varying vec2 vUv; uniform float uTime, uDark, uOpacity;
       void main(){
         float s = 0.5 + 0.5 * sin(vUv.x * 6.2831 * 1.5 + uTime * 0.8);
-        vec3 a = mix(vec3(0.20, 0.47, 0.42), vec3(0.16, 0.86, 0.58), uDark);
-        vec3 b = mix(vec3(0.78, 0.93, 0.89), vec3(0.92, 1.0, 0.97), uDark);
+        vec3 a = mix(vec3(0.24, 0.235, 0.23), vec3(0.30, 0.38, 0.85), uDark);
+        vec3 b = mix(vec3(0.76, 0.75, 0.73), vec3(0.85, 0.9, 1.0), uDark);
         gl_FragColor = vec4(mix(a, b, s * s), uOpacity);
       }`,
   })
@@ -96,14 +95,15 @@ function labelTexture(l) {
     const g = c.getContext('2d')
     g.clearRect(0, 0, c.width, c.height)
     g.fillStyle = '#fff'; g.textBaseline = 'alphabetic'
-    g.font = "400 330px 'Pinyon Script'"
-    g.fillText(l.sw, 30, 330)
-    const off = 30 + g.measureText(l.sw).width * 0.80
-    g.font = "400 168px 'Instrument Serif'"
-    g.fillText(l.a, off, 300)
-    if (l.b) { g.font = "italic 400 128px 'Instrument Serif'"; g.fillText(l.b, off - 40, 420) }
-    g.font = "500 30px 'JetBrains Mono'"; g.globalAlpha = 0.85
-    g.fillText(l.c.toUpperCase(), off - 36, l.b ? 500 : 380)
+    g.font = "800 condensed 215px 'Archivo Variable'"
+    const head = (l.sw + l.a).toUpperCase()
+    g.fillText(head, 26, 250)
+    if (l.b) { g.font = "italic 600 condensed 150px 'Archivo Variable'"; g.fillText(l.b.toUpperCase(), 30, 408) }
+    g.fillStyle = '#ff7a42'
+    g.fillRect(30, l.b ? 448 : 300, 46, 8)
+    g.fillStyle = '#fff'
+    g.font = "500 34px 'Geist Mono Variable'"; g.globalAlpha = 0.9
+    g.fillText(l.c.toUpperCase(), 96, l.b ? 486 : 338)
     g.globalAlpha = 1
     tex.needsUpdate = true
   }
@@ -124,9 +124,9 @@ export function createShards(labels) {
       precision highp float; varying vec3 vN, vV; varying vec2 vS; varying float vD; uniform float uVis;
       void main(){
         vec3 n = normalize(vN); float f = pow(1.0 - abs(dot(n, normalize(vV))), 1.8);
-        vec3 rb = 0.5 + 0.5 * cos(6.2831 * (f * 1.6 + vS.x * 0.9 + vS.y * 0.4 + vec3(0.0, 0.33, 0.67)));
         float streak = pow(max(0.0, sin(vS.x * 3.0 + vS.y * 5.0 + n.x * 6.0)), 14.0);
-        vec3 col = vec3(1.0, 0.80, 0.78) * 0.34 + vec3(1.0) * f * 0.95 + rb * pow(f, 2.2) * 0.75 + vec3(1.0) * streak * 0.5;
+        vec3 ember = mix(vec3(1.0, 0.33, 0.10), vec3(1.0, 0.72, 0.38), f);
+        vec3 col = vec3(0.10, 0.098, 0.105) * 0.8 + vec3(0.9, 0.88, 0.86) * f * 0.8 + ember * pow(f, 2.0) * 0.9 + vec3(1.0, 0.8, 0.6) * streak * 0.45;
         float a = (0.15 + f * 0.75 + streak * 0.4) * smoothstep(30.0, 15.0, vD) * smoothstep(0.7, 2.6, vD) * uVis;
         gl_FragColor = vec4(col, a);
       }`,
@@ -203,8 +203,8 @@ function stripTexture(lines) {
   tex.colorSpace = THREE.SRGBColorSpace
   const draw = () => {
     const g = c.getContext('2d')
-    g.fillStyle = '#cfdccf'; g.fillRect(0, 0, c.width, c.height)
-    g.fillStyle = '#1c2a24'; g.font = "500 22px 'JetBrains Mono'"; g.textBaseline = 'top'
+    g.fillStyle = '#ecebe7'; g.fillRect(0, 0, c.width, c.height)
+    g.fillStyle = '#26282c'; g.font = "500 22px 'Geist Mono Variable'"; g.textBaseline = 'top'
     lines.forEach((l, i) => g.fillText(l, 28 + (i % 2) * 0, 14 + i * 26))
     g.globalAlpha = 0.25; g.fillRect(0, 248, c.width, 2); g.globalAlpha = 1
     tex.needsUpdate = true
@@ -245,7 +245,7 @@ export function createDepths() {
       void main(){
         float d = length(gl_PointCoord - 0.5);
         float a = smoothstep(0.5, 0.0, d); a *= a;
-        vec3 col = mix(vec3(1.0, 0.78, 0.30), vec3(0.45, 1.0, 0.75), step(0.62, vS));
+        vec3 col = mix(vec3(1.0, 0.62, 0.22), vec3(0.55, 0.65, 1.0), step(0.62, vS));
         gl_FragColor = vec4(col * a * vA * uVis, 1.0);
       }`,
   }))
@@ -275,7 +275,7 @@ export function createDepths() {
       fragmentShader: /* glsl */ `
         precision highp float; uniform sampler2D uMap; uniform float uVis; varying vec2 vUv; varying float vD; varying float vL;
         void main(){
-          vec3 c = texture2D(uMap, vUv).rgb * vec3(0.55, 0.72, 0.62) * vL;
+          vec3 c = texture2D(uMap, vUv).rgb * vec3(0.78, 0.72, 0.62) * vL;
           float a = smoothstep(30.0, 16.0, vD) * smoothstep(1.0, 3.5, vD) * uVis;
           gl_FragColor = vec4(c * (0.35 + 0.65 * smoothstep(22.0, 6.0, vD)), a);
         }`,
