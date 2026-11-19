@@ -1,4 +1,5 @@
 import '@fontsource-variable/archivo/wdth.css'
+import '@fontsource-variable/archivo/wdth-italic.css'
 import '@fontsource-variable/geist-mono'
 import './style.css'
 import gsap from 'gsap'
@@ -90,6 +91,8 @@ $('#foot').innerHTML = `<span>${IDENTITY.unit} · © ${new Date().getFullYear()}
 const sections = [...document.querySelectorAll('.sec')].filter((s) => !s.hidden)
 $('#nav').innerHTML = sections.filter((s) => s.dataset.nav).map((s) => `<a href="#${s.id}">${s.dataset.nav}</a>`).join('')
 const navLinks = [...document.querySelectorAll('#nav a')]
+$('#rail').insertAdjacentHTML('beforeend', sections.filter((s) => s.dataset.nav).map((s, i) =>
+  `<b style="--at:${(+s.dataset.t / 7).toFixed(3)}">${String(i + 1).padStart(2, '0')}</b>`).join(''))
 
 const tagEls = {}
 const addTag = (id, html, cls, i = 0) => {
@@ -141,11 +144,19 @@ function build(narrow) {
   T({ el: 0.16, dist: 9.8 * far }, 5.4, 6.4)
   T({ el: 0.3, dist: 10.4 * far, explode: 0.16 }, 6.5, 7)
   tl.to({}, { duration: 0.01 }, 7)
-  for (const w of document.querySelectorAll('#story .w')) {
-    const a = +w.dataset.in, b = +w.dataset.out, d = b - a
-    tl.fromTo(w, { autoAlpha: 0, scale: 0.96, filter: 'blur(14px)', letterSpacing: '0.06em' },
-      { autoAlpha: 1, scale: 1, filter: 'blur(0px)', letterSpacing: '0em', duration: d * 0.38, ease: 'power3.out' }, a)
-    tl.to(w, { autoAlpha: 0, scale: 1.03, filter: 'blur(10px)', duration: d * 0.3, ease: 'power2.in' }, b - d * 0.3)
+  for (const st of document.querySelectorAll('#story .st')) {
+    const a = +st.dataset.in, b = +st.dataset.out, d = b - a
+    const blocks = st.querySelectorAll('.b')
+    tl.set(st, { autoAlpha: 1 }, a)
+    blocks.forEach((blk, i) => {
+      const at = a + i * d * 0.22
+      tl.fromTo(blk, { autoAlpha: 0, y: 26, filter: 'blur(12px)' },
+        { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: d * 0.34, ease: 'power3.out' }, at)
+      tl.fromTo(blk.querySelectorAll('.x, .s'), { yPercent: 36, opacity: 0 },
+        { yPercent: 0, opacity: 1, duration: d * 0.3, ease: 'power3.out', stagger: d * 0.07 }, at)
+    })
+    tl.to(blocks, { autoAlpha: 0, y: -20, filter: 'blur(9px)', duration: d * 0.26, ease: 'power2.in', stagger: d * 0.04 }, b - d * 0.28)
+    tl.set(st, { autoAlpha: 0 }, b)
   }
 }
 
@@ -244,7 +255,7 @@ addEventListener('resize', resize)
 document.addEventListener('visibilitychange', () => { S.alive = !document.hidden; if (S.alive) { last = performance.now(); requestAnimationFrame(frame) } })
 
 const P = { x: 0, y: 0 }, CUR = { x: innerWidth / 2, y: innerHeight / 2 }
-const cur = $('#cur')
+const cur = $('#cur'), rail = $('#rail')
 if (!coarse) {
   document.documentElement.classList.add('fine')
   addEventListener('pointerover', (e) => cur.classList.toggle('act', !!e.target.closest('a, button')), { passive: true })
@@ -289,6 +300,7 @@ function frame(now) {
     el.style.opacity = k.toFixed(3)
     el.style.transform = `translate3d(${P.x.toFixed(1)}px, ${P.y.toFixed(1)}px, 0)`
   }
+  rail.style.setProperty('--t', (S.t / 7).toFixed(4))
   if (G.dark > 0.5 !== night) { night = G.dark > 0.5; document.body.classList.toggle('night', night); $('meta[name=theme-color]').content = night ? '#0c0c0d' : '#ecebe7'; if (night) audio.hit('reveal') }
   if (G.explode > 0.42 !== wasOpen) { wasOpen = G.explode > 0.42; audio.hit(wasOpen ? 'open' : 'close') }
   document.body.classList.toggle('xray', view.lens > 0.4)

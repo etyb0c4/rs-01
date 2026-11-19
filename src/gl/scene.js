@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { createHero, H } from './box.js'
+import { createAir } from './air.js'
 import { FLOOR_VERT, FLOOR_FRAG } from './glsl.js'
 
 const CENTRE = 1.07 // height of the middle of the box when it stands on the bench
@@ -12,6 +13,10 @@ export function createScene(stage) {
   const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 120)
   const hero = createHero()
   scene.add(hero.group)
+  const air = createAir()
+  scene.add(air.group)
+  const FOG_DAY = new THREE.Color('#dad8d2'), FOG_NIGHT = new THREE.Color('#05060a')
+  scene.fog = new THREE.FogExp2(FOG_DAY.clone(), 0.016)
 
   const key = new THREE.DirectionalLight('#ffffff', 2.3)
   key.position.set(4.5, 8, 5.5)
@@ -70,6 +75,10 @@ export function createScene(stage) {
       catcher.material.opacity = 0.24 * (1 - G.dark)
       floorU.uDark.value = G.dark
       stage.back.uDark.value = G.dark
+      scene.fog.color.lerpColors(FOG_DAY, FOG_NIGHT, G.dark)
+      scene.fog.density = 0.016 + 0.012 * G.dark
+      air.setDpr(stage.dpr)
+      air.update(time, G)
       stage.over.uVig.value = 0.14 + 0.3 * G.dark
       stage.over.uFade.value = Math.max(G.fade, G.dim)
 
