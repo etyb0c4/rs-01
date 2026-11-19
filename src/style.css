@@ -278,7 +278,7 @@ body.path-good .gate-card.good, body.path-dark .gate-card.dark { border-color: v
 body.path-good .gate-card.good .gc-go, body.path-dark .gate-card.dark .gc-go { background: var(--orange); border-color: var(--orange); color: var(--ink); }
 
 /* crossing over */
-#cross { position: fixed; z-index: 5; right: var(--pad); bottom: 24px; display: flex; align-items: center; gap: 9px; background: var(--card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--line); color: var(--fg); font: 600 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 11px 13px; cursor: pointer; transition: border-color 0.25s; }
+#cross { position: fixed; z-index: 7; right: var(--pad); bottom: 24px; display: flex; align-items: center; gap: 9px; background: var(--card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--line); color: var(--fg); font: 600 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; padding: 11px 13px; cursor: pointer; transition: border-color 0.25s; }
 #cross:hover { border-color: var(--orange); }
 #cross i { width: 8px; height: 8px; background: var(--orange); transform: rotate(45deg); }
 
@@ -296,4 +296,79 @@ body.jumping main, body.jumping #tags { animation: dimjump 0.55s steps(3) 1; }
   .gate-card { min-height: 26vh; }
   #cross { right: 16px; bottom: 16px; }
   #cross span { display: none; }
+}
+
+/* ═════════ experience mode ═════════ */
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+body { touch-action: none; user-select: none; -webkit-user-select: none; }
+.dim, .dim * { user-select: text; -webkit-user-select: text; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+#ink { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 2; pointer-events: none; }
+#bar, #rail, .story, #tags, #acts { opacity: 0; transition: opacity 0.9s 0.2s; }
+.ready #bar, .ready #rail, .ready .story, .ready #tags, .ready #acts { opacity: 1; }
+
+/* acts ride the timeline as fixed overlays */
+#acts { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+#acts .act { position: absolute; inset: clamp(70px, 11vh, 120px) var(--pad); visibility: hidden; opacity: 0; }
+#acts .col { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: min(47vw, 640px); }
+#acts .col.c { left: 50%; transform: translate(-50%, -50%); width: min(90vw, 900px); text-align: center; }
+#acts .k.c { justify-content: center; }
+#acts .col.c .chips { justify-content: center; }
+#acts .act.name h1 span:last-child { -webkit-text-stroke: 0; color: var(--fg); }
+#acts .ports, #acts .parts { pointer-events: none; }
+
+/* gate 0: trace the S */
+#trace { position: fixed; inset: 0; z-index: 7; display: grid; place-items: center; pointer-events: none; }
+#trace svg { position: absolute; left: 50%; top: 50%; width: min(34vmin, 300px); transform: translate(-50%, -54%); overflow: visible; }
+#trace-s { fill: none; stroke: var(--orange); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; filter: drop-shadow(0 0 10px rgba(255, 79, 26, 0.6)); animation: tracepath 3.6s cubic-bezier(0.5, 0, 0.3, 1) infinite; }
+@keyframes tracepath { 0% { stroke-dashoffset: 100; opacity: 1; } 60% { stroke-dashoffset: 0; opacity: 1; } 80%, 100% { stroke-dashoffset: 0; opacity: 0; } }
+.trace-label { position: absolute; left: 50%; bottom: 18vh; transform: translateX(-50%); font: 600 12px/1 var(--mono); letter-spacing: 0.22em; text-transform: uppercase; color: var(--fg); background: var(--card); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--line); padding: 11px 15px; white-space: nowrap; }
+#skip { position: absolute; left: 50%; bottom: max(24px, env(safe-area-inset-bottom)); transform: translateX(-50%); pointer-events: auto; background: none; border: 1px solid var(--line); color: var(--mute); font: 500 11px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; padding: 9px 13px; cursor: pointer; }
+#skip:hover { color: var(--fg); border-color: var(--orange); }
+#skip kbd { font: inherit; opacity: 0.6; }
+body.in #trace { display: none; }
+
+/* gate 1: hold to break the seal */
+#holdgate { position: fixed; left: 50%; top: 50%; width: 82px; height: 82px; margin: -41px 0 0 -41px; z-index: 4; pointer-events: none; opacity: 0; transform: scale(0.6); transition: opacity 0.5s, transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
+#holdgate.on { opacity: 1; transform: none; }
+#holdgate svg { width: 100%; height: 100%; overflow: visible; }
+#holdgate circle { fill: none; stroke-width: 5; }
+.hg-bg { stroke: var(--line); animation: hgpulse 2.2s ease-in-out infinite; transform-origin: 50% 50%; }
+.hg-fg { stroke: var(--orange); stroke-dasharray: 100; stroke-dashoffset: 100; transform: rotate(-90deg); transform-origin: 50% 50%; stroke-linecap: round; }
+@keyframes hgpulse { 50% { transform: scale(1.12); opacity: 0.5; } }
+#holdgate span { position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 14px; font: 600 11px/1.35 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--fg); white-space: nowrap; }
+
+#hint { position: fixed; left: 50%; bottom: 36px; transform: translateX(-50%); z-index: 4; display: flex; align-items: center; gap: 9px; font: 600 10px/1 var(--mono); letter-spacing: 0.22em; text-transform: uppercase; color: var(--mute); opacity: 0; transition: opacity 0.6s; pointer-events: none; }
+#hint.on { opacity: 0.9; }
+#hint i { width: 5px; height: 5px; background: var(--orange); animation: hbob 1.6s ease-in-out infinite; }
+@keyframes hbob { 50% { transform: translateY(5px); opacity: 0.3; } }
+
+/* the fork is an overlay now */
+#fork { position: fixed; inset: 0; z-index: 5; display: flex; flex-direction: column; justify-content: center; gap: 4vh; padding: clamp(70px, 11vh, 120px) var(--pad); opacity: 0; visibility: hidden; transform: translateY(26px); transition: opacity 0.7s, visibility 0.7s, transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1); pointer-events: none; }
+#fork.on { opacity: 1; visibility: visible; transform: none; pointer-events: auto; }
+.fork-head h2 { max-width: 15em; }
+
+/* the dimensions: scrollable worlds */
+.dim { position: fixed; inset: 0; z-index: 6; overflow: auto; overscroll-behavior: contain; touch-action: pan-y; }
+#dim-good { --fg: var(--ink); --bg: var(--paper); --mute: rgba(12, 12, 13, 0.58); --line: rgba(12, 12, 13, 0.16); --card: rgba(236, 235, 231, 0.6); color: var(--fg); background: color-mix(in srgb, var(--paper) 86%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+#dim-dark { --fg: #e9e7e2; --bg: #0c0c0d; --mute: rgba(233, 231, 226, 0.6); --line: rgba(233, 231, 226, 0.17); --card: rgba(16, 17, 21, 0.65); color: var(--fg); background: color-mix(in srgb, #0a0a0e 84%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+.dim-in { max-width: 1060px; margin: 0 auto; padding: 86px var(--pad) 90px; display: flex; flex-direction: column; gap: 11vh; }
+.dim-h { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 12px; font: 600 11px/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); padding: 16px 0 12px; background: inherit; }
+.dim-h b { background: var(--orange); color: var(--ink); padding: 6px 8px; font-weight: 600; }
+.dim-x { margin-left: auto; width: 34px; height: 34px; border: 1px solid var(--line); background: none; color: var(--fg); font-size: 17px; line-height: 1; cursor: pointer; }
+.dim-x:hover { border-color: var(--orange); color: var(--orange); }
+.tagsline.big span { font-size: 13px; padding: 10px 12px; }
+.dim .record, .dim .notes { border-top-color: var(--fg); }
+.dim .foot { margin-top: 40px; }
+
+@media (max-width: 899px), (max-aspect-ratio: 1/1) {
+  #acts .col { top: auto; bottom: 2vh; transform: none; width: 100%; }
+  #acts .col.c { left: 0; top: 50%; bottom: auto; transform: translateY(-50%); width: 100%; }
+  #acts .act { inset: 70px 16px 60px; }
+  #fork { gap: 2.5vh; overflow: hidden; }
+  .fork-head h2 { font-size: clamp(1.7rem, 7vw, 2.6rem); }
+  #holdgate span { left: 50%; top: 100%; margin: 10px 0 0; transform: translateX(-50%); text-align: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #trace-s { animation: none; stroke-dashoffset: 0; }
 }
