@@ -16,24 +16,29 @@
     <div id="boot" aria-hidden="true"><b>RS—01</b><span id="boot-n">000</span><i>unsealing</i></div>
     <canvas id="gl" aria-hidden="true"></canvas>
     <div id="tags" aria-hidden="true"></div>
-    <div id="story" aria-hidden="true">
+    <div id="story" class="story" aria-hidden="true">
       <section class="st" data-in="0.44" data-out="0.98">
         <p class="b tl"><span class="s">the label says</span><span class="x">do not</span><span class="x"><i>open</i>.</span></p>
         <p class="b br"><span class="s">it really does say that</span></p>
       </section>
-      <section class="st" data-in="1.36" data-out="1.86">
+      <section class="st" data-in="1.36" data-out="1.84">
         <p class="b tl"><span class="s">so, naturally,</span></p>
-        <p class="b br"><span class="x">I <i>opened</i> it.</span></p>
+        <p class="b br"><span class="x">I <i>pressed</i>.</span></p>
       </section>
-      <section class="st" data-in="3.0" data-out="3.44">
-        <p class="b tr"><span class="s">four disciplines, one habit</span><span class="x">find where</span></p>
-        <p class="b br"><span class="x">it <i>gives</i>.</span></p>
-      </section>
-      <section class="st" data-in="3.72" data-out="4.2">
+      <section class="st" data-in="5.1" data-out="5.72">
         <p class="b c"><span class="s">breaking is diagnosis</span><span class="x">build it back.</span><span class="x"><i>better</i>.</span></p>
       </section>
-      <section class="st" data-in="6.5" data-out="6.94">
+      <section class="st" data-in="8.5" data-out="8.94">
         <p class="b c"><span class="x">your <i>move</i>.</span></p>
+      </section>
+    </div>
+    <div id="story2" class="story" aria-hidden="true">
+      <section class="st red" data-in="2.08" data-out="2.5">
+        <p class="b tl"><span class="s">everything opens</span><span class="x">find where</span></p>
+        <p class="b br"><span class="x">it <i>gives</i>.</span></p>
+      </section>
+      <section class="st red" data-in="2.56" data-out="3.02">
+        <p class="b c"><span class="s">right there</span><span class="x">and it <i>gave</i>.</span></p>
       </section>
     </div>
     <div id="rail" aria-hidden="true"><i id="rail-needle"></i></div>
@@ -69,10 +74,18 @@
         </div>
       </section>
 
-      <section class="sec tall" id="teardown" data-t="2" data-nav="Teardown">
+      <section class="sec" id="rupture" data-t="2" data-nav="Rupture">
+        <div class="col">
+          <p class="k"><b>02</b> Rupture</p>
+          <h2>It holds, it holds — and then it <em class="fr">doesn't</em>.</h2>
+          <p class="lead">One seam, the right pressure. The shell never argues for long. This is the moment every black box fears: the first crack of daylight.</p>
+        </div>
+      </section>
+
+      <section class="sec tall" id="teardown" data-t="3" data-nav="Teardown">
         <div class="pin">
           <div class="col">
-            <p class="k"><b>02</b> Teardown</p>
+            <p class="k"><b>03</b> Teardown</p>
             <h2>Then I take it <em class="fr">apart</em>.</h2>
             <p class="lead">Four disciplines, one habit: understand the mechanism, find where it gives.</p>
             <ol class="parts" id="parts"></ol>
@@ -80,42 +93,42 @@
         </div>
       </section>
 
-      <section class="sec" id="record" data-t="4" data-nav="Record">
+      <section class="sec" id="record" data-t="6" data-nav="Record">
         <div class="col wide">
-          <p class="k"><b>03</b> Record</p>
+          <p class="k"><b>04</b> Record</p>
           <h2>What was a black box is now <em class="fr">glass</em>.</h2>
           <p class="lead">That is the job. These are the times it was measured against other people.</p>
           <ul class="record" id="record-list"></ul>
         </div>
       </section>
 
-      <section class="sec" id="work" data-t="5" data-nav="Work">
+      <section class="sec" id="work" data-t="7" data-nav="Work">
         <div class="col wide">
-          <p class="k"><b>04</b> Work</p>
+          <p class="k"><b>05</b> Work</p>
           <h2>Breaking is half. I also <em class="fr">build</em>.</h2>
           <div class="work" id="work-list"></div>
         </div>
       </section>
 
-      <section class="sec" id="arsenal" data-t="6" data-nav="Arsenal">
+      <section class="sec" id="arsenal" data-t="8" data-nav="Arsenal">
         <div class="col wide">
-          <p class="k"><b>05</b> Arsenal</p>
+          <p class="k"><b>06</b> Arsenal</p>
           <h2>When the tool is slower than the problem, I <em class="fr">rewrite</em> it.</h2>
           <div class="arsenal" id="arsenal-list"></div>
         </div>
       </section>
 
-      <section class="sec" id="notes" data-t="6.5" data-nav="Notes" hidden>
+      <section class="sec" id="notes" data-t="8.5" data-nav="Notes" hidden>
         <div class="col wide">
-          <p class="k"><b>06</b> Field notes</p>
+          <p class="k"><b>07</b> Field notes</p>
           <h2>Every solve becomes a <em class="fr">playbook</em>.</h2>
           <ul class="notes" id="notes-list"></ul>
         </div>
       </section>
 
-      <section class="sec" id="contact" data-t="7" data-nav="Contact">
+      <section class="sec" id="contact" data-t="9" data-nav="Contact">
         <div class="col wide">
-          <p class="k"><b id="contact-n">06</b> Contact</p>
+          <p class="k"><b id="contact-n">07</b> Contact</p>
           <div class="id" id="id-card"></div>
           <p class="foot" id="foot"></p>
         </div>

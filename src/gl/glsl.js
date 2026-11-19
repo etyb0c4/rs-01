@@ -13,7 +13,7 @@ void main() { vUv = position.xy * 0.5 + 0.5; gl_Position = vec4(position.xy, 0.0
 export const BACK_FRAG = /* glsl */ `
 precision highp float;
 varying vec2 vUv;
-uniform float uTime, uAspect, uDark;
+uniform float uTime, uAspect, uDark, uRage;
 uniform vec2 uPool;
 ${NOISE}
 void main() {
@@ -24,6 +24,10 @@ void main() {
   vec3 night = mix(vec3(0.026, 0.028, 0.034), vec3(0.046, 0.050, 0.064), smoothstep(0.0, 1.0, vUv.y));
   night += pool * vec3(0.016, 0.026, 0.060);
   vec3 col = mix(paper, night, uDark);
+  vec3 rage = mix(vec3(0.050, 0.010, 0.007), vec3(0.165, 0.030, 0.013), smoothstep(0.0, 0.9, vUv.y));
+  rage += pool * vec3(0.24, 0.055, 0.02);
+  rage *= 0.93 + 0.07 * sin(uTime * 2.3);
+  col = mix(col, rage, uRage);
   col += (vnoise(vUv * vec2(uAspect, 1.0) * 3.0 + uTime * 0.02) - 0.5) * 0.012;
   gl_FragColor = vec4(col, 1.0);
 }`
@@ -60,7 +64,7 @@ void main() { vec4 w = modelMatrix * vec4(position, 1.0); vW = w.xyz; gl_Positio
 export const FLOOR_FRAG = /* glsl */ `
 precision highp float;
 varying vec3 vW;
-uniform float uDark, uHub;
+uniform float uDark, uHub, uRage;
 uniform vec3 uHomes[5];
 float grid(vec2 p, float s) { vec2 c = p / s; vec2 g = abs(fract(c - 0.5) - 0.5) / fwidth(c); return 1.0 - min(min(g.x, g.y), 1.0); }
 float line(float v) { return 1.0 - smoothstep(0.0, 1.5, abs(v) / fwidth(v)); }
@@ -75,6 +79,6 @@ void main() {
     marks += line(max(q.x, q.y) - 1.22) * 0.4 * uHomes[i].y;
   }
   a += marks * 0.24 * uHub;
-  vec3 col = mix(vec3(0.04), vec3(0.30, 0.46, 1.0), uDark);
-  gl_FragColor = vec4(col, a * mix(1.0, 2.6, uDark));
+  vec3 col = mix(mix(vec3(0.04), vec3(0.30, 0.46, 1.0), uDark), vec3(1.0, 0.30, 0.10), uRage);
+  gl_FragColor = vec4(col, a * mix(1.0, 2.6, max(uDark, uRage * 0.8)));
 }`

@@ -61,7 +61,7 @@ $('#arsenal-list').innerHTML = PARTS.map((p) => `<div class="kit"><p><b>${p.key}
 
 if (NOTES.length) {
   $('#notes').hidden = false
-  $('#contact-n').textContent = '07'
+  $('#contact-n').textContent = '08'
   $('#notes-list').innerHTML = NOTES.map((n) => `
     <li><a class="row" href="${n.url || '#'}"${ext(n.url)}>
       <span class="cat">${n.category}</span>
@@ -92,7 +92,7 @@ const sections = [...document.querySelectorAll('.sec')].filter((s) => !s.hidden)
 $('#nav').innerHTML = sections.filter((s) => s.dataset.nav).map((s) => `<a href="#${s.id}">${s.dataset.nav}</a>`).join('')
 const navLinks = [...document.querySelectorAll('#nav a')]
 $('#rail').insertAdjacentHTML('beforeend', sections.filter((s) => s.dataset.nav).map((s, i) =>
-  `<b style="--at:${(+s.dataset.t / 7).toFixed(3)}">${String(i + 1).padStart(2, '0')}</b>`).join(''))
+  `<b style="--at:${(+s.dataset.t / 9).toFixed(3)}">${String(i + 1).padStart(2, '0')}</b>`).join(''))
 
 const tagEls = {}
 const addTag = (id, html, cls, i = 0) => {
@@ -106,7 +106,7 @@ addTag('flag', `<b>flag</b><span>${FLAGS.box}</span>`, 'flag')
 console.log(`%c${IDENTITY.unit}%c you opened the box the right way. ${FLAGS.console}`, 'background:#ff4f1a;color:#0c0c0d;padding:2px 6px;font-weight:700', 'color:inherit')
 
 /* ───────── the picture ───────── */
-const G = { az: 0.62, el: 0.3, dist: 9.2, shift: 1.55, rise: 0, turn: 0, explode: 0, glass: 0, detail: 1, dark: 0, seam: 0, lens: 1, ports: 0, parts: 0, flag: 0, spin: 0, dim: 0, fade: 1, drop: 2.6, shake: 0 }
+const G = { az: 0.62, el: 0.3, dist: 9.2, shift: 1.55, rise: 0, turn: 0, explode: 0, glass: 0, detail: 1, dark: 0, seam: 0, lens: 1, ports: 0, parts: 0, flag: 0, spin: 0, dim: 0, fade: 1, drop: 2.6, shake: 0, rage: 0, burst: 0 }
 const FX = { seam: 0, shake: 0 }
 const S = { t: 0, target: 0, time: 0, narrow: false, slow: 0, alive: true }
 const still = matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -117,7 +117,7 @@ function build(narrow) {
   tl?.kill()
   // side: how far the box sits to the right of the text; on a narrow screen it stays centred, above or behind the text
   const side = narrow ? 0 : 1, far = narrow ? 1.5 : 1
-  Object.assign(G, { az: 0.62, el: 0.3, dist: 9.2 * far, shift: 1.55 * side, rise: narrow ? 1.5 : 0, explode: 0, glass: 0, detail: 1, dark: 0, seam: 0, lens: 1, ports: 0, parts: 0, flag: 0, spin: 0, dim: 0 })
+  Object.assign(G, { az: 0.62, el: 0.3, dist: 9.2 * far, shift: 1.55 * side, rise: narrow ? 1.5 : 0, explode: 0, glass: 0, detail: 1, dark: 0, seam: 0, lens: 1, ports: 0, parts: 0, flag: 0, spin: 0, dim: 0, rage: 0, burst: 0 })
   tl = gsap.timeline({ paused: true, defaults: { ease: 'sine.inOut' } })
   const T = (vars, from, to, ease) => tl.to(G, { ...vars, duration: to - from, ...(ease ? { ease } : {}) }, from)
 
@@ -125,26 +125,32 @@ function build(narrow) {
   T({ az: 0.2, el: 0.1, dist: 6.4 * far, shift: 1.2 * side, rise: narrow ? 1.25 : 0.42 }, 0.1, 1)
   T({ ports: 1 }, 0.72, 0.98)
   T({ ports: 0 }, 1.5, 1.75)
-  T({ lens: 0 }, 1.7, 1.95)
-  // 02 teardown: the seal gives, light leaks, everything comes apart
-  T({ az: 0.78, el: 0.42, dist: 12.6 * far, shift: 2.3 * side, rise: narrow ? 2.2 : 0.2 }, 1.45, 2.7)
-  T({ seam: 0.5 }, 1.8, 2.05)
-  T({ explode: 1 }, 2.02, 3.02, 'none')
-  T({ seam: 0 }, 2.15, 2.7)
-  T({ parts: 1, flag: 1 }, 2.82, 3.02)
-  T({ parts: 0, flag: 0 }, 3.34, 3.48)
-  // 03 rebuild: lights out, and the same box goes back together in glass
-  T({ dark: 1 }, 3.38, 3.78)
-  T({ detail: 0 }, 3.38, 3.5)
-  T({ glass: 1 }, 3.46, 3.74)
-  T({ explode: 0 }, 3.58, 4.0)
-  T({ az: 0.7, el: 0.24, dist: 10.6 * far, shift: 2.5 * side, rise: 0, spin: 1, dim: narrow ? 0.78 : 0 }, 3.5, 4)
+  T({ lens: 0 }, 1.6, 1.85)
+  // 02 rupture: hard cut close on the seam, the world goes red, the shell lets go
+  tl.set(G, { az: 0.06, el: 0.13 }, 1.96)
+  T({ dist: 4.7 * far, shift: 0.85 * side, rise: narrow ? 1.15 : 0.42 }, 1.96, 2.24, 'power2.out')
+  T({ rage: 1, seam: 1 }, 1.98, 2.42)
+  T({ burst: 1 }, 2.1, 2.98, 'none')
+  T({ dist: 7.0 * far, el: 0.21, rise: narrow ? 1.3 : 0.25 }, 2.26, 2.95, 'power2.out')
+  // out of the red, into the clean autopsy
+  T({ rage: 0, seam: 0 }, 2.86, 3.34)
+  T({ az: 0.78, el: 0.42, dist: 12.6 * far, shift: 2.3 * side, rise: narrow ? 2.2 : 0.2 }, 2.8, 4.0)
+  // 03 teardown
+  T({ explode: 1 }, 3.05, 4.05, 'none')
+  T({ parts: 1, flag: 1 }, 3.85, 4.05)
+  T({ parts: 0, flag: 0 }, 4.37, 4.51)
+  // 04 rebuild: lights out, and the same box goes back together in glass
+  T({ dark: 1 }, 4.41, 4.81)
+  T({ detail: 0 }, 4.41, 4.53)
+  T({ glass: 1 }, 4.49, 4.77)
+  T({ explode: 0 }, 4.61, 5.03)
+  T({ az: 0.7, el: 0.24, dist: 10.6 * far, shift: 2.5 * side, rise: 0, spin: 1, dim: narrow ? 0.78 : 0 }, 4.53, 5.03)
   // the rest of the page: the glass box keeps turning beside the content
-  T({ el: 0.36, dist: 11.4 * far }, 4.2, 5.2)
-  T({ el: 0.16, dist: 9.8 * far }, 5.4, 6.4)
-  T({ el: 0.3, dist: 10.4 * far, explode: 0.16 }, 6.5, 7)
-  tl.to({}, { duration: 0.01 }, 7)
-  for (const st of document.querySelectorAll('#story .st')) {
+  T({ el: 0.36, dist: 11.4 * far }, 6.2, 7.2)
+  T({ el: 0.16, dist: 9.8 * far }, 7.4, 8.4)
+  T({ el: 0.3, dist: 10.4 * far, explode: 0.16 }, 8.5, 9)
+  tl.to({}, { duration: 0.01 }, 9)
+  for (const st of document.querySelectorAll('.story .st')) {
     const a = +st.dataset.in, b = +st.dataset.out, d = b - a
     const blocks = st.querySelectorAll('.b')
     tl.set(st, { autoAlpha: 1 }, a)
@@ -170,7 +176,7 @@ sndLabel()
 snd.addEventListener('click', () => { audio.start(); audio.toggle(); sndLabel() })
 for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart']) addEventListener(ev, () => audio.start(), { once: true, passive: true })
 
-const ACTS = { top: 'paper', recon: 'paper', teardown: 'tear', record: 'night', work: 'night', arsenal: 'night', notes: 'night', contact: 'end' }
+const ACTS = { top: 'paper', recon: 'paper', rupture: 'tear', teardown: 'tear', record: 'night', work: 'night', arsenal: 'night', notes: 'night', contact: 'end' }
 
 /* scroll position → timeline time: each section's top is pinned to its data-t */
 let marks = []
@@ -260,7 +266,7 @@ if (!coarse) {
   document.documentElement.classList.add('fine')
   addEventListener('pointerover', (e) => cur.classList.toggle('act', !!e.target.closest('a, button')), { passive: true })
 }
-let last = performance.now(), night = false, wasOpen = false
+let last = performance.now(), night = false, wasOpen = false, wasRage = false
 function frame(now) {
   if (!S.alive) return
   const dt = Math.min(0.05, (now - last) / 1000)
@@ -300,9 +306,13 @@ function frame(now) {
     el.style.opacity = k.toFixed(3)
     el.style.transform = `translate3d(${P.x.toFixed(1)}px, ${P.y.toFixed(1)}px, 0)`
   }
-  rail.style.setProperty('--t', (S.t / 7).toFixed(4))
+  rail.style.setProperty('--t', (S.t / 9).toFixed(4))
   if (G.dark > 0.5 !== night) { night = G.dark > 0.5; document.body.classList.toggle('night', night); $('meta[name=theme-color]').content = night ? '#0c0c0d' : '#ecebe7'; if (night) audio.hit('reveal') }
   if (G.explode > 0.42 !== wasOpen) { wasOpen = G.explode > 0.42; audio.hit(wasOpen ? 'open' : 'close') }
+  if (G.rage > 0.4 !== wasRage) {
+    wasRage = G.rage > 0.4
+    if (wasRage) { audio.hit('shatter'); gsap.fromTo(FX, { shake: 1.3 }, { shake: 0, duration: 1.3, ease: 'power2.out' }) }
+  }
   document.body.classList.toggle('xray', view.lens > 0.4)
 
   // drop the resolution when frames keep running long

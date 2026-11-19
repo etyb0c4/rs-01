@@ -94,6 +94,13 @@ export function createAudio() {
       o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(28, t + 0.9)
       g.gain.setValueAtTime(0.55, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.1)
       o.connect(g); g.connect(master); o.start(t); o.stop(t + 1.2)
+    } else if (kind === 'shatter') {
+      burst(1.15, 0.42, 1300); burst(0.4, 0.2, 3400)
+      ;[988, 1480, 1976, 2640].forEach((f, i) => ping(f, 0.8 + i * 0.2, 0.035, 0.03 + i * 0.05))
+      const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain()
+      o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(24, t + 1.2)
+      g.gain.setValueAtTime(0.65, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4)
+      o.connect(g); g.connect(master); o.start(t); o.stop(t + 1.5)
     } else if (kind === 'reveal') [392, 587.33, 739.99, 987.77, 1479.98].forEach((f, i) => ping(f, 3.2, 0.05, i * 0.13, 'triangle'))
   }
 

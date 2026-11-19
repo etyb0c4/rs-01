@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { createHero, H } from './box.js'
 import { createAir } from './air.js'
+import { createShards } from './shards.js'
 import { FLOOR_VERT, FLOOR_FRAG } from './glsl.js'
 
 const CENTRE = 1.07 // height of the middle of the box when it stands on the bench
@@ -15,7 +16,10 @@ export function createScene(stage) {
   scene.add(hero.group)
   const air = createAir()
   scene.add(air.group)
-  const FOG_DAY = new THREE.Color('#dad8d2'), FOG_NIGHT = new THREE.Color('#05060a')
+  const shards = createShards()
+  shards.group.position.z = H + 0.04
+  hero.body.add(shards.group)
+  const FOG_DAY = new THREE.Color('#dad8d2'), FOG_NIGHT = new THREE.Color('#05060a'), FOG_RAGE = new THREE.Color('#170503')
   scene.fog = new THREE.FogExp2(FOG_DAY.clone(), 0.016)
 
   const key = new THREE.DirectionalLight('#ffffff', 2.3)
@@ -30,7 +34,7 @@ export function createScene(stage) {
 
   const catcher = new THREE.Mesh(new THREE.PlaneGeometry(40, 40).rotateX(-Math.PI / 2), new THREE.ShadowMaterial({ opacity: 0.24 }))
   catcher.receiveShadow = true
-  const floorU = { uDark: { value: 0 }, uHub: { value: 0 }, uHomes: { value: Array.from({ length: 5 }, () => new THREE.Vector3()) } }
+  const floorU = { uDark: { value: 0 }, uHub: { value: 0 }, uRage: { value: 0 }, uHomes: { value: Array.from({ length: 5 }, () => new THREE.Vector3()) } }
   const floor = new THREE.Mesh(new THREE.PlaneGeometry(44, 44).rotateX(-Math.PI / 2), new THREE.ShaderMaterial({
     vertexShader: FLOOR_VERT, fragmentShader: FLOOR_FRAG, uniforms: floorU, transparent: true, depthWrite: false,
   }))
@@ -50,7 +54,7 @@ export function createScene(stage) {
     /* G is the picture at this point of the page; pointer is in CSS pixels (or null when there is none) */
     update(G, time, dt, pointer) {
       hero.group.position.y = G.explode * 0.95 + (G.drop || 0)
-      hero.setExplode(G.explode)
+      hero.setExplode(G.explode, G.burst * 2.4 * (1 - G.explode))
       hero.setGlass(G.glass)
       hero.setDetail(G.detail)
       hero.setSeam(G.seam)
@@ -75,11 +79,17 @@ export function createScene(stage) {
       catcher.material.opacity = 0.24 * (1 - G.dark)
       floorU.uDark.value = G.dark
       stage.back.uDark.value = G.dark
-      scene.fog.color.lerpColors(FOG_DAY, FOG_NIGHT, G.dark)
-      scene.fog.density = 0.016 + 0.012 * G.dark
+      scene.fog.color.lerpColors(FOG_DAY, FOG_NIGHT, G.dark).lerp(FOG_RAGE, G.rage)
+      scene.fog.density = 0.016 + 0.012 * G.dark + 0.012 * G.rage
+      stage.back.uRage.value = G.rage
+      stage.over.uGrain.value = 0.045 + 0.075 * G.rage
+      floorU.uRage.value = G.rage
+      key.intensity -= 1.9 * G.rage * (1 - G.dark)
+      scene.environmentIntensity -= 0.5 * G.rage
       air.setDpr(stage.dpr)
       air.update(time, G)
-      stage.over.uVig.value = 0.14 + 0.3 * G.dark
+      shards.set(G.burst, time)
+      stage.over.uVig.value = 0.14 + 0.3 * G.dark + 0.3 * G.rage
       stage.over.uFade.value = Math.max(G.fade, G.dim)
 
       // where the box sits on screen, to place the pool of light and to know when the pointer is on it

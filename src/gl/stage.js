@@ -31,7 +31,7 @@ export function createStage(canvas) {
   pmrem.dispose()
 
   const back = fullscreen(BACK_FRAG, {
-    uTime: { value: 0 }, uAspect: { value: 1 }, uDark: { value: 0 }, uPool: { value: new THREE.Vector2(0.5, 0.55) },
+    uTime: { value: 0 }, uAspect: { value: 1 }, uDark: { value: 0 }, uRage: { value: 0 }, uPool: { value: new THREE.Vector2(0.5, 0.55) },
   })
   const over = fullscreen(OVER_FRAG, {
     uTime: { value: 0 }, uAspect: { value: 1 }, uGrain: { value: 0.045 }, uVig: { value: 0.16 }, uFade: { value: 1 },

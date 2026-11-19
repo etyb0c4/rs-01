@@ -339,7 +339,7 @@ export function createHero() {
       if (e === state.explode && pop === state.pop) return
       state.explode = e; state.pop = pop
       for (const m of movers) m.set(ease(clamp01((e - m.w0) / (m.w1 - m.w0))))
-      if (pop) for (const p of kase.panels) p.o.position.addScaledVector(p.n, 0.03 * pop)
+      if (pop) for (const p of kase.panels) p.o.position.addScaledVector(p.n, 0.055 * pop)
     },
     setGlass(g) {
       if (g === state.glass) return

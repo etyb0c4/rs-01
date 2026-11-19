@@ -20,7 +20,7 @@ export function createAir() {
   const dustGeo = new THREE.BufferGeometry()
   dustGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
   dustGeo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1))
-  const dustU = { uTime: { value: 0 }, uDark: { value: 0 }, uSize: { value: 1 } }
+  const dustU = { uTime: { value: 0 }, uDark: { value: 0 }, uRage: { value: 0 }, uSize: { value: 1 } }
   const dust = new THREE.Points(dustGeo, new THREE.ShaderMaterial({
     uniforms: dustU,
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
@@ -41,14 +41,15 @@ export function createAir() {
       }`,
     fragmentShader: /* glsl */ `
       precision highp float;
-      uniform float uDark;
+      uniform float uDark, uRage;
       varying float vA;
       void main() {
         float r = length(gl_PointCoord - 0.5);
         float a = smoothstep(0.5, 0.08, r) * vA;
         vec3 day = vec3(0.55, 0.53, 0.49);
         vec3 night = vec3(0.45, 0.55, 0.95);
-        gl_FragColor = vec4(mix(day, night, uDark), a * mix(0.16, 0.30, uDark));
+        vec3 col = mix(mix(day, night, uDark), vec3(1.0, 0.42, 0.12), uRage);
+        gl_FragColor = vec4(col, a * (mix(0.16, 0.30, uDark) + 0.26 * uRage));
       }`,
   }))
   dust.frustumCulled = false
@@ -104,9 +105,10 @@ export function createAir() {
   return {
     group,
     setDpr(v) { dpr = v },
-    update(time, { dark, explode }) {
+    update(time, { dark, explode, rage = 0 }) {
       dustU.uTime.value = time
       dustU.uDark.value = dark
+      dustU.uRage.value = rage
       dustU.uSize.value = dpr
       shaftU.uDark.value = dark
       // the shaft belongs to the open box: swells while it is apart, almost gone otherwise
