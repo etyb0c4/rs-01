@@ -42,6 +42,7 @@
       </section>
     </div>
     <div id="rail" aria-hidden="true"><i id="rail-needle"></i></div>
+    <button id="cross" type="button" hidden><i></i><span></span></button>
     <div id="cur" aria-hidden="true"><i></i></div>
 
     <header id="bar">
@@ -93,34 +94,64 @@
         </div>
       </section>
 
-      <section class="sec" id="record" data-t="6" data-nav="Record">
-        <div class="col wide">
-          <p class="k"><b>04</b> Record</p>
-          <h2>What was a black box is now <em class="fr">glass</em>.</h2>
-          <p class="lead">That is the job. These are the times it was measured against other people.</p>
-          <ul class="record" id="record-list"></ul>
+      <section class="sec fork" id="fork" data-t="6" data-nav="The fork">
+        <div class="fork-head">
+          <p class="k"><b>04</b> The fork</p>
+          <h2>Same person. Two <em class="fr">dimensions</em>.</h2>
+          <p class="lead">What was a black box is now glass — and behind the glass, the path splits. Pick a side. You can always cross over.</p>
+        </div>
+        <div class="fork-split">
+          <button type="button" class="gate-card good" data-choose="good">
+            <span class="gc-k">dimension a · the one that builds</span>
+            <span class="gc-t">good<br />path</span>
+            <span class="gc-s">interfaces · engines · tools that feel alive</span>
+            <span class="gc-go">enter →</span>
+          </button>
+          <button type="button" class="gate-card dark" data-choose="dark">
+            <span class="gc-k">dimension b · the one that breaks</span>
+            <span class="gc-t">dark<br />path</span>
+            <span class="gc-s">CTF · pwn · the record against other people</span>
+            <span class="gc-go">enter →</span>
+          </button>
         </div>
       </section>
 
-      <section class="sec" id="work" data-t="7" data-nav="Work">
+      <section class="sec" id="work" data-t="7" data-path="good" data-nav="Work">
         <div class="col wide">
           <p class="k"><b>05</b> Work</p>
-          <h2>Breaking is half. I also <em class="fr">build</em>.</h2>
+          <h2>The dimension where I <em class="fr">build</em>.</h2>
           <div class="work" id="work-list"></div>
         </div>
       </section>
 
-      <section class="sec" id="arsenal" data-t="8" data-nav="Arsenal">
+      <section class="sec" id="record" data-t="7" data-path="dark" data-nav="Record">
         <div class="col wide">
-          <p class="k"><b>06</b> Arsenal</p>
+          <p class="k"><b>05</b> Record</p>
+          <h2>Measured against <em class="fr">other people</em>.</h2>
+          <p class="lead">That is the job. These are the receipts.</p>
+          <ul class="record" id="record-list"></ul>
+        </div>
+      </section>
+
+      <section class="sec" id="ops" data-t="7.6" data-path="dark" data-nav="Ops">
+        <div class="col wide">
+          <p class="k"><b>06</b> Operations</p>
+          <h2>Built to <em class="fr">break</em> things.</h2>
+          <div class="work" id="ops-list"></div>
+        </div>
+      </section>
+
+      <section class="sec" id="arsenal" data-t="8.2" data-path="dark" data-nav="Arsenal">
+        <div class="col wide">
+          <p class="k"><b>07</b> Arsenal</p>
           <h2>When the tool is slower than the problem, I <em class="fr">rewrite</em> it.</h2>
           <div class="arsenal" id="arsenal-list"></div>
         </div>
       </section>
 
-      <section class="sec" id="notes" data-t="8.5" data-nav="Notes" hidden>
+      <section class="sec" id="notes" data-t="8.6" data-path="dark" data-nav="Notes" hidden>
         <div class="col wide">
-          <p class="k"><b>07</b> Field notes</p>
+          <p class="k"><b>08</b> Field notes</p>
           <h2>Every solve becomes a <em class="fr">playbook</em>.</h2>
           <ul class="notes" id="notes-list"></ul>
         </div>
@@ -128,7 +159,7 @@
 
       <section class="sec" id="contact" data-t="9" data-nav="Contact">
         <div class="col wide">
-          <p class="k"><b id="contact-n">07</b> Contact</p>
+          <p class="k"><b id="contact-n">05</b> Contact</p>
           <div class="id" id="id-card"></div>
           <p class="foot" id="foot"></p>
         </div>

@@ -46,7 +46,7 @@ $('#record-list').innerHTML = RECORD.map((r) => {
   return `<li>${r.url ? `<a class="row" href="${r.url}"${ext(r.url)}>${body}</a>` : `<div class="row">${body}</div>`}</li>`
 }).join('')
 
-$('#work-list').innerHTML = PROJECTS.map((p, i) => `
+const card = (p, i) => `
   <article class="card">
     <div class="shot"><img src="${asset(p.img)}" alt="${p.name}" loading="lazy" /><span class="side ${p.side}">${p.side}</span></div>
     <p class="meta"><b>${String(i + 1).padStart(2, '0')}</b>${p.role}<i>${p.year}</i></p>
@@ -54,7 +54,9 @@ $('#work-list').innerHTML = PROJECTS.map((p, i) => `
     <p class="blurb">${p.blurb}</p>
     <p class="metric">${p.metric}</p>
     <div class="tagsline">${chips(p.stack)}</div>
-  </article>`).join('')
+  </article>`
+$('#work-list').innerHTML = PROJECTS.filter((p) => p.side === 'build').map(card).join('')
+$('#ops-list').innerHTML = PROJECTS.filter((p) => p.side === 'break').map(card).join('')
 
 $('#arsenal-list').innerHTML = PARTS.map((p) => `<div class="kit"><p><b>${p.key}</b>${p.title}</p><div class="tagsline">${chips(p.tools)}</div></div>`).join('') +
   `<div class="kit all"><p><b>+</b>Languages &amp; stack</p><div class="tagsline">${chips(STACK)}</div></div>`
@@ -89,10 +91,15 @@ av.addEventListener('error', () => av.parentElement.classList.add('none'))
 $('#foot').innerHTML = `<span>${IDENTITY.unit} · © ${new Date().getFullYear()} ${IDENTITY.name}</span><span>no trackers, no templates</span>`
 
 const sections = [...document.querySelectorAll('.sec')].filter((s) => !s.hidden)
-$('#nav').innerHTML = sections.filter((s) => s.dataset.nav).map((s) => `<a href="#${s.id}">${s.dataset.nav}</a>`).join('')
+$('#nav').innerHTML = sections.filter((s) => s.dataset.nav).map((s) => `<a href="#${s.id}"${s.dataset.path ? ` data-path="${s.dataset.path}"` : ''}>${s.dataset.nav}</a>`).join('')
 const navLinks = [...document.querySelectorAll('#nav a')]
-$('#rail').insertAdjacentHTML('beforeend', sections.filter((s) => s.dataset.nav).map((s, i) =>
-  `<b style="--at:${(+s.dataset.t / 9).toFixed(3)}">${String(i + 1).padStart(2, '0')}</b>`).join(''))
+function buildRail() {
+  const r = $('#rail')
+  r.querySelectorAll('b').forEach((b) => b.remove())
+  r.insertAdjacentHTML('beforeend', sections.filter((s) => s.dataset.nav && s.offsetParent !== null).map((s, i) =>
+    `<b style="--at:${(+s.dataset.t / 9).toFixed(3)}">${String(i + 1).padStart(2, '0')}</b>`).join(''))
+}
+buildRail()
 
 const tagEls = {}
 const addTag = (id, html, cls, i = 0) => {
@@ -176,12 +183,12 @@ sndLabel()
 snd.addEventListener('click', () => { audio.start(); audio.toggle(); sndLabel() })
 for (const ev of ['pointerdown', 'keydown', 'wheel', 'touchstart']) addEventListener(ev, () => audio.start(), { once: true, passive: true })
 
-const ACTS = { top: 'paper', recon: 'paper', rupture: 'tear', teardown: 'tear', record: 'night', work: 'night', arsenal: 'night', notes: 'night', contact: 'end' }
+const ACTS = { top: 'paper', recon: 'paper', rupture: 'tear', teardown: 'tear', fork: 'night', work: 'paper', record: 'night', ops: 'night', arsenal: 'night', notes: 'night', contact: 'end' }
 
 /* scroll position → timeline time: each section's top is pinned to its data-t */
 let marks = []
 function measure() {
-  marks = sections.map((s) => ({ y: s.offsetTop, t: +s.dataset.t, id: s.id, name: s.dataset.nav }))
+  marks = sections.filter((s) => s.offsetParent !== null).map((s) => ({ y: s.offsetTop, t: +s.dataset.t, id: s.id, name: s.dataset.nav }))
   const end = Math.max(1, document.documentElement.scrollHeight - innerHeight)
   marks.push({ y: Math.max(end, marks.at(-1).y + 1), t: marks.at(-1).t, id: null })
 }
@@ -247,6 +254,33 @@ addEventListener('pointercancel', () => { holding = false })
 sealBtn.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { audio.start(); holding = true } })
 sealBtn.addEventListener('keyup', () => { holding = false })
 
+/* ── the fork: two dimensions, one page ── */
+let PATH = null
+const cross = $('#cross')
+function choose(path, scroll = true) {
+  audio.start()
+  const was = PATH
+  PATH = path
+  document.body.classList.remove('path-good', 'path-dark')
+  document.body.classList.add('path-' + path)
+  document.body.classList.add('jumping')
+  setTimeout(() => document.body.classList.remove('jumping'), 600)
+  cross.hidden = false
+  cross.querySelector('span').textContent = path === 'good' ? 'cross to the dark path' : 'cross to the good path'
+  $('#contact-n').textContent = path === 'good' ? '06' : NOTES.length ? '09' : '08'
+  if (was !== path) { audio.hit(path === 'dark' ? 'shatter' : 'open'); gsap.fromTo(FX, { shake: 0.7 }, { shake: 0, duration: 0.8, ease: 'power2.out' }) }
+  measure()
+  buildRail()
+  if (scroll) {
+    const first = document.querySelector(`.sec[data-path='${path}']`)
+    setTimeout(() => scrollTo({ top: first.offsetTop + 2, behavior: still ? 'auto' : 'smooth' }), 60)
+  }
+  current = ''
+  chapter()
+}
+document.querySelectorAll('[data-choose]').forEach((b) => b.addEventListener('click', () => choose(b.dataset.choose)))
+cross.addEventListener('click', () => choose(PATH === 'good' ? 'dark' : 'good'))
+
 /* headings flinch when their section arrives */
 const io = new IntersectionObserver((es) => es.forEach((e) => e.target.classList.toggle('inview', e.isIntersecting)), { threshold: 0.12 })
 sections.forEach((sec) => io.observe(sec))
@@ -309,6 +343,11 @@ function frame(now) {
   rail.style.setProperty('--t', (S.t / 9).toFixed(4))
   if (G.dark > 0.5 !== night) { night = G.dark > 0.5; document.body.classList.toggle('night', night); $('meta[name=theme-color]').content = night ? '#0c0c0d' : '#ecebe7'; if (night) audio.hit('reveal') }
   if (G.explode > 0.42 !== wasOpen) { wasOpen = G.explode > 0.42; audio.hit(wasOpen ? 'open' : 'close') }
+  if (PATH && S.t > 6.15) {
+    const k = Math.min(1, (S.t - 6.15) / 0.6)
+    if (PATH === 'good') G.dark *= 1 - k
+    else G.rage = Math.max(G.rage, k * (0.05 + 0.035 * Math.sin(S.time * 0.8)))
+  }
   if (G.rage > 0.4 !== wasRage) {
     wasRage = G.rage > 0.4
     if (wasRage) { audio.hit('shatter'); gsap.fromTo(FX, { shake: 1.3 }, { shake: 0, duration: 1.3, ease: 'power2.out' }) }
