@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#ecebe7" />
+    <title>Rayan Sama · RS—01</title>
+    <meta name="description" content="Rayan Sama (etyb0c4 / saiyanj1n), full-stack developer and security researcher in Cotonou. I take black boxes apart, then I build better ones." />
+    <meta name="author" content="Rayan Sama" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Rayan Sama · RS—01" />
+    <meta property="og:description" content="I take black boxes apart, then I build better ones." />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <canvas id="gl" aria-hidden="true"></canvas>
+    <div id="tags" aria-hidden="true"></div>
+
+    <header id="bar">
+      <a class="unit" href="#top"><b>RS—01</b><span id="chapter">sealed unit</span></a>
+      <nav id="nav" aria-label="Sections"></nav>
+    </header>
+
+    <main>
+      <section class="sec hero" id="top" data-t="0">
+        <div class="col">
+          <p class="k" id="hero-k"></p>
+          <h1 id="hero-name"></h1>
+          <p class="aka" id="hero-aka"></p>
+          <p class="lead" id="hero-line"></p>
+          <div class="chips" id="hero-chips"></div>
+        </div>
+        <p class="cue"><span class="fine">hover the box to see through it</span><span class="coarse">the lens shows what is inside</span><i>scroll to open it ↓</i></p>
+      </section>
+
+      <section class="sec" id="recon" data-t="1" data-nav="Way in">
+        <div class="col">
+          <p class="k"><b>01</b> Way in</p>
+          <h2>Every box looks <em class="fr">sealed</em> from the outside.</h2>
+          <p class="lead">It never is. Before anything gets touched, I enumerate: what is listening, what it is running, what it trusts. This one has three doors.</p>
+          <ul class="ports" id="ports"></ul>
+        </div>
+      </section>
+
+      <section class="sec tall" id="teardown" data-t="2" data-nav="Teardown">
+        <div class="pin">
+          <div class="col">
+            <p class="k"><b>02</b> Teardown</p>
+            <h2>Then I take it <em class="fr">apart</em>.</h2>
+            <p class="lead">Four disciplines, one habit: understand the mechanism, find where it gives.</p>
+            <ol class="parts" id="parts"></ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" id="record" data-t="4" data-nav="Record">
+        <div class="col wide">
+          <p class="k"><b>03</b> Record</p>
+          <h2>What was a black box is now <em class="fr">glass</em>.</h2>
+          <p class="lead">That is the job. These are the times it was measured against other people.</p>
+          <ul class="record" id="record-list"></ul>
+        </div>
+      </section>
+
+      <section class="sec" id="work" data-t="5" data-nav="Work">
+        <div class="col wide">
+          <p class="k"><b>04</b> Work</p>
+          <h2>Breaking is half. I also <em class="fr">build</em>.</h2>
+          <div class="work" id="work-list"></div>
+        </div>
+      </section>
+
+      <section class="sec" id="arsenal" data-t="6" data-nav="Arsenal">
+        <div class="col wide">
+          <p class="k"><b>05</b> Arsenal</p>
+          <h2>When the tool is slower than the problem, I <em class="fr">rewrite</em> it.</h2>
+          <div class="arsenal" id="arsenal-list"></div>
+        </div>
+      </section>
+
+      <section class="sec" id="notes" data-t="6.5" data-nav="Notes" hidden>
+        <div class="col wide">
+          <p class="k"><b>06</b> Field notes</p>
+          <h2>Every solve becomes a <em class="fr">playbook</em>.</h2>
+          <ul class="notes" id="notes-list"></ul>
+        </div>
+      </section>
+
+      <section class="sec" id="contact" data-t="7" data-nav="Contact">
+        <div class="col wide">
+          <p class="k"><b id="contact-n">06</b> Contact</p>
+          <div class="id" id="id-card"></div>
+          <p class="foot" id="foot"></p>
+        </div>
+      </section>
+    </main>
+
+    <noscript><p style="padding:2rem">Rayan Sama (etyb0c4 / saiyanj1n), full-stack developer and security researcher. ryansama.tech@gmail.com · github.com/etyb0c4</p></noscript>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
