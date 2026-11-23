@@ -1,0 +1,11 @@
+import { chromium } from 'playwright'
+const b = await chromium.launch({ executablePath: '/usr/bin/chromium', args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] })
+const p = await b.newPage({ viewport: { width: 1280, height: 800 } })
+await p.goto('http://localhost:5199/')
+await p.waitForTimeout(2200)
+await p.click('#skip')
+await p.waitForTimeout(5200)
+await p.click('.gate-card.dark')
+await p.waitForTimeout(1600)
+await p.screenshot({ path: '/tmp/claude-1000/-home-etyb0c4-perso-portfolio/c5771ad4-c78e-4b18-8257-ffb631cb2a1c/scratchpad/s-lab/medal.png' })
+await b.close()
